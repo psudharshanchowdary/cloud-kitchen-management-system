@@ -49,6 +49,10 @@ A web-based application to streamline cloud kitchen operations, including order 
 ![Kitchen Dashboard]
 ![image](https://github.com/user-attachments/assets/c2ed5dbd-f167-4f27-94bf-043959e5bffc)
 
+### menu management
+![food menu]
+![image](https://github.com/user-attachments/assets/06e9f605-d9a0-4ed7-89a0-c90f5f672af7)
+
 ### Dashboard
 ![Dashboard]
 ![image](https://github.com/user-attachments/assets/90691b5c-6c59-4255-8807-2bc98d902af7)
