@@ -1,0 +1,1547 @@
+{
+  "users": [
+    {
+      "id": "user-owner-1",
+      "email": "owner@queenskitchen.com",
+      "name": "Queen Rajkumari",
+      "role": "Owner",
+      "phone": "9876543210",
+      "is_active": true,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "user-manager-1",
+      "email": "manager@queenskitchen.com",
+      "name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "phone": "9876543211",
+      "is_active": true,
+      "created_at": "2026-05-01T10:30:00Z"
+    },
+    {
+      "id": "user-chef-head",
+      "email": "headchef@queenskitchen.com",
+      "name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "phone": "9876543212",
+      "is_active": true,
+      "created_at": "2026-05-01T11:00:00Z"
+    },
+    {
+      "id": "user-chef-1",
+      "email": "chef1@queenskitchen.com",
+      "name": "Arun Kumar",
+      "role": "Chef",
+      "phone": "9876543213",
+      "is_active": true,
+      "created_at": "2026-05-01T11:15:00Z"
+    },
+    {
+      "id": "user-chef-2",
+      "email": "chef2@queenskitchen.com",
+      "name": "Vikas Khanna",
+      "role": "Chef",
+      "phone": "9876543214",
+      "is_active": true,
+      "created_at": "2026-05-01T11:20:00Z"
+    },
+    {
+      "id": "user-assistant-1",
+      "email": "assistant@queenskitchen.com",
+      "name": "Ramu Patel",
+      "role": "Kitchen Assistant",
+      "phone": "9876543215",
+      "is_active": true,
+      "created_at": "2026-05-01T11:30:00Z"
+    },
+    {
+      "id": "user-inventory-1",
+      "email": "inventory@queenskitchen.com",
+      "name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "phone": "9876543216",
+      "is_active": true,
+      "created_at": "2026-05-01T11:45:00Z"
+    },
+    {
+      "id": "user-packer-1",
+      "email": "packer@queenskitchen.com",
+      "name": "Deepak Roy",
+      "role": "Packing Staff",
+      "phone": "9876543217",
+      "is_active": true,
+      "created_at": "2026-05-01T12:00:00Z"
+    },
+    {
+      "id": "user-driver-1",
+      "email": "driver@queenskitchen.com",
+      "name": "Ravi Kumar",
+      "role": "Delivery Driver",
+      "phone": "9876543210",
+      "is_active": true,
+      "created_at": "2026-05-01T12:00:00Z"
+    }
+  ],
+  "staff": [
+    {
+      "id": "staff-owner-1",
+      "user_id": "user-owner-1",
+      "name": "Queen Rajkumari",
+      "role": "Owner",
+      "phone": "9876543210",
+      "email": "owner@queenskitchen.com",
+      "salary": 0,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-manager-1",
+      "user_id": "user-manager-1",
+      "name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "phone": "9876543211",
+      "email": "manager@queenskitchen.com",
+      "salary": 85000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-chef-head",
+      "user_id": "user-chef-head",
+      "name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "phone": "9876543212",
+      "email": "headchef@queenskitchen.com",
+      "salary": 75000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-chef-1",
+      "user_id": "user-chef-1",
+      "name": "Arun Kumar",
+      "role": "Chef",
+      "phone": "9876543213",
+      "email": "chef1@queenskitchen.com",
+      "salary": 45000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-chef-2",
+      "user_id": "user-chef-2",
+      "name": "Vikas Khanna",
+      "role": "Chef",
+      "phone": "9876543214",
+      "email": "chef2@queenskitchen.com",
+      "salary": 45000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-assistant-1",
+      "user_id": "user-assistant-1",
+      "name": "Ramu Patel",
+      "role": "Kitchen Assistant",
+      "phone": "9876543215",
+      "email": "assistant@queenskitchen.com",
+      "salary": 25000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-inventory-1",
+      "user_id": "user-inventory-1",
+      "name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "phone": "9876543216",
+      "email": "inventory@queenskitchen.com",
+      "salary": 35000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    },
+    {
+      "id": "staff-packer-1",
+      "user_id": "user-packer-1",
+      "name": "Deepak Roy",
+      "role": "Packing Staff",
+      "phone": "9876543217",
+      "email": "packer@queenskitchen.com",
+      "salary": 22000,
+      "joining_date": "2026-05-01",
+      "status": "Active"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "att-1",
+      "staff_id": "staff-owner-1",
+      "staff_name": "Queen Rajkumari",
+      "role": "Owner",
+      "date": "2026-06-17",
+      "clock_in": "09:15 AM",
+      "clock_out": "06:00 PM",
+      "working_hours": 8.75,
+      "status": "Present"
+    },
+    {
+      "id": "att-2",
+      "staff_id": "staff-manager-1",
+      "staff_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "date": "2026-06-17",
+      "clock_in": "08:50 AM",
+      "clock_out": "07:30 PM",
+      "working_hours": 10.66,
+      "status": "Present"
+    },
+    {
+      "id": "att-3",
+      "staff_id": "staff-chef-head",
+      "staff_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "date": "2026-06-17",
+      "clock_in": "09:30 AM",
+      "clock_out": "09:00 PM",
+      "working_hours": 11.5,
+      "status": "Late"
+    },
+    {
+      "id": "att-4",
+      "staff_id": "staff-chef-1",
+      "staff_name": "Arun Kumar",
+      "role": "Chef",
+      "date": "2026-06-17",
+      "clock_in": "10:00 AM",
+      "clock_out": "10:00 PM",
+      "working_hours": 12,
+      "status": "Present"
+    },
+    {
+      "id": "att-5",
+      "staff_id": "staff-chef-2",
+      "staff_name": "Vikas Khanna",
+      "role": "Chef",
+      "date": "2026-06-17",
+      "clock_in": "10:05 AM",
+      "clock_out": "10:00 PM",
+      "working_hours": 11.9,
+      "status": "Present"
+    },
+    {
+      "id": "att-6",
+      "staff_id": "staff-assistant-1",
+      "staff_name": "Ramu Patel",
+      "role": "Kitchen Assistant",
+      "date": "2026-06-17",
+      "clock_in": "09:00 AM",
+      "clock_out": "09:00 PM",
+      "working_hours": 12,
+      "status": "Present"
+    },
+    {
+      "id": "att-7",
+      "staff_id": "staff-inventory-1",
+      "staff_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "date": "2026-06-17",
+      "clock_in": "09:10 AM",
+      "clock_out": "06:00 PM",
+      "working_hours": 8.83,
+      "status": "Present"
+    },
+    {
+      "id": "att-8",
+      "staff_id": "staff-packer-1",
+      "staff_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "date": "2026-06-17",
+      "clock_in": "11:00 AM",
+      "clock_out": "11:00 PM",
+      "working_hours": 12,
+      "status": "Present"
+    }
+  ],
+  "menu_items": [
+    {
+      "id": "menu-1",
+      "name": "Chicken Biryani",
+      "category": "Rice & Biryani",
+      "price": 280,
+      "description": "Authentic Hyderabadi dum biryani cooked with tender chicken pieces and basmati rice.",
+      "is_vegetarian": false,
+      "is_available": true,
+      "preparation_time": 25,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-2",
+      "name": "Paneer Butter Masala",
+      "category": "Main Course",
+      "price": 240,
+      "description": "Cottage cheese cubes cooked in a rich, creamy, tomato and cashew-based gravy.",
+      "is_vegetarian": true,
+      "is_available": true,
+      "preparation_time": 20,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-3",
+      "name": "Butter Naan",
+      "category": "Breads",
+      "price": 60,
+      "description": "Soft and fluffy flatbread baked in tandoor and brushed with fresh butter.",
+      "is_vegetarian": true,
+      "is_available": true,
+      "preparation_time": 8,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-4",
+      "name": "Tandoori Chicken (Half)",
+      "category": "Starters",
+      "price": 220,
+      "description": "Chicken marinated in yogurt and spices, roasted to perfection in a tandoor.",
+      "is_vegetarian": false,
+      "is_available": true,
+      "preparation_time": 18,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-5",
+      "name": "Gulab Jamun (2 Pcs)",
+      "category": "Desserts",
+      "price": 80,
+      "description": "Soft milk-solid balls dipped in sweet cardamom flavored sugar syrup.",
+      "is_vegetarian": true,
+      "is_available": true,
+      "preparation_time": 5,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-6",
+      "name": "Masala Chaas",
+      "category": "Beverages",
+      "price": 50,
+      "description": "Refreshing buttermilk spiced with ginger, green chillies, coriander and roasted cumin.",
+      "is_vegetarian": true,
+      "is_available": true,
+      "preparation_time": 5,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-7",
+      "name": "Veg Fried Rice",
+      "category": "Chinese",
+      "price": 180,
+      "description": "Stir-fried rice cooked with fresh seasonal vegetables and authentic Chinese sauces.",
+      "is_vegetarian": true,
+      "is_available": true,
+      "preparation_time": 15,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "menu-8",
+      "name": "Chilli Chicken",
+      "category": "Chinese",
+      "price": 240,
+      "description": "Crispy chicken chunks tossed in spicy soy-chilli sauce with capsicum and onions.",
+      "is_vegetarian": false,
+      "is_available": true,
+      "preparation_time": 15,
+      "created_at": "2026-05-01T10:00:00Z"
+    }
+  ],
+  "menu_item_ingredients": [
+    {
+      "id": "m-ing-1",
+      "menu_item_id": "menu-1",
+      "ingredient_id": "inv-chicken",
+      "quantity": 0.25
+    },
+    {
+      "id": "m-ing-2",
+      "menu_item_id": "menu-1",
+      "ingredient_id": "inv-rice",
+      "quantity": 0.15
+    },
+    {
+      "id": "m-ing-3",
+      "menu_item_id": "menu-2",
+      "ingredient_id": "inv-paneer",
+      "quantity": 0.2
+    },
+    {
+      "id": "m-ing-4",
+      "menu_item_id": "menu-2",
+      "ingredient_id": "inv-butter",
+      "quantity": 0.05
+    },
+    {
+      "id": "m-ing-5",
+      "menu_item_id": "menu-2",
+      "ingredient_id": "inv-tomatoes",
+      "quantity": 0.15
+    },
+    {
+      "id": "m-ing-6",
+      "menu_item_id": "menu-3",
+      "ingredient_id": "inv-flour",
+      "quantity": 0.1
+    },
+    {
+      "id": "m-ing-7",
+      "menu_item_id": "menu-3",
+      "ingredient_id": "inv-butter",
+      "quantity": 0.02
+    }
+  ],
+  "inventory": [
+    {
+      "id": "inv-chicken",
+      "name": "Chicken",
+      "category": "Meat & Seafood",
+      "quantity": 25,
+      "unit": "kg",
+      "min_level": 10,
+      "price_per_unit": 220,
+      "supplier_id": "sup-1",
+      "storage_location": "Deep Freezer 1",
+      "updated_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "inv-rice",
+      "name": "Basmati Rice",
+      "category": "Grains & Spices",
+      "quantity": 80,
+      "unit": "kg",
+      "min_level": 20,
+      "price_per_unit": 90,
+      "supplier_id": "sup-2",
+      "storage_location": "Dry Pantry Rack A",
+      "updated_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "inv-paneer",
+      "name": "Paneer",
+      "category": "Dairy",
+      "quantity": 12,
+      "unit": "kg",
+      "min_level": 5,
+      "price_per_unit": 320,
+      "supplier_id": "sup-1",
+      "storage_location": "Walk-in Cooler 1",
+      "updated_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "inv-butter",
+      "name": "Amul Butter",
+      "category": "Dairy",
+      "quantity": 4,
+      "unit": "kg",
+      "min_level": 6,
+      "price_per_unit": 480,
+      "supplier_id": "sup-1",
+      "storage_location": "Walk-in Cooler 2",
+      "updated_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "inv-tomatoes",
+      "name": "Tomatoes",
+      "category": "Vegetables",
+      "quantity": 3,
+      "unit": "kg",
+      "min_level": 8,
+      "price_per_unit": 40,
+      "supplier_id": "sup-1",
+      "storage_location": "Vegetable Crate B",
+      "updated_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "inv-flour",
+      "name": "Maida (Flour)",
+      "category": "Grains & Spices",
+      "quantity": 45,
+      "unit": "kg",
+      "min_level": 15,
+      "price_per_unit": 45,
+      "supplier_id": "sup-2",
+      "storage_location": "Dry Pantry Rack B",
+      "updated_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "inv-cooking-oil",
+      "name": "Refined Sunflower Oil",
+      "category": "Oils & Condiments",
+      "quantity": 60,
+      "unit": "L",
+      "min_level": 15,
+      "price_per_unit": 130,
+      "supplier_id": "sup-2",
+      "storage_location": "Dry Pantry Floor",
+      "updated_at": "2026-06-18T06:42:56.987Z"
+    }
+  ],
+  "inventory_transactions": [
+    {
+      "id": "inv-tr-1",
+      "ingredient_id": "inv-chicken",
+      "ingredient_name": "Chicken",
+      "type": "IN",
+      "quantity": 20,
+      "reference_id": "po-1",
+      "notes": "Received via Purchase Order po-1",
+      "created_at": "2026-06-16T11:00:00Z"
+    },
+    {
+      "id": "inv-tr-2",
+      "ingredient_id": "inv-tomatoes",
+      "ingredient_name": "Tomatoes",
+      "type": "OUT",
+      "quantity": 5,
+      "reference_id": "order-101",
+      "notes": "Deducted for orders completed today",
+      "created_at": "2026-06-17T21:00:00Z"
+    },
+    {
+      "id": "inv-tr-1781764976987-9pug",
+      "ingredient_id": "inv-cooking-oil",
+      "ingredient_name": "Refined Sunflower Oil",
+      "type": "IN",
+      "quantity": 30,
+      "reference_id": "po-2",
+      "notes": "Stock entry from Purchase Order: po-2",
+      "created_at": "2026-06-18T06:42:56.987Z"
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "sup-1",
+      "name": "Fresh Foods & Dairy Co.",
+      "contact_person": "Rajesh Kumar",
+      "phone": "9988776655",
+      "email": "rajesh@freshfoods.com",
+      "address": "G-14, Koyambedu Market, Chennai, Tamil Nadu 600107",
+      "payment_terms": "Net 15",
+      "lead_time": 1,
+      "created_at": "2026-05-01T10:00:00Z"
+    },
+    {
+      "id": "sup-2",
+      "name": "Metro Cash & Carry Bulk Hub",
+      "contact_person": "Siddharth Sen",
+      "phone": "9988776656",
+      "email": "siddharth@metrocorp.in",
+      "address": "NH-4 Bypass, Poonamallee, Chennai, Tamil Nadu 600056",
+      "payment_terms": "Cash on Delivery",
+      "lead_time": 2,
+      "created_at": "2026-05-01T10:30:00Z"
+    }
+  ],
+  "purchase_orders": [
+    {
+      "id": "po-1",
+      "supplier_id": "sup-1",
+      "supplier_name": "Fresh Foods & Dairy Co.",
+      "total_amount": 7600,
+      "status": "Received",
+      "order_date": "2026-06-15",
+      "delivery_date": "2026-06-16",
+      "created_at": "2026-06-15T14:00:00Z"
+    },
+    {
+      "id": "po-2",
+      "supplier_id": "sup-2",
+      "supplier_name": "Metro Cash & Carry Bulk Hub",
+      "total_amount": 3900,
+      "status": "Received",
+      "order_date": "2026-06-18",
+      "created_at": "2026-06-18T10:00:00Z",
+      "delivery_date": "2026-06-18"
+    },
+    {
+      "id": "po-1781765856867",
+      "supplier_id": "sup-1",
+      "supplier_name": "Fresh Foods & Dairy Co.",
+      "total_amount": 2200,
+      "status": "Ordered",
+      "order_date": "2026-06-18",
+      "created_at": "2026-06-18T06:57:36.867Z"
+    }
+  ],
+  "purchase_order_items": [
+    {
+      "id": "po-item-1",
+      "purchase_order_id": "po-1",
+      "ingredient_id": "inv-chicken",
+      "ingredient_name": "Chicken",
+      "quantity": 20,
+      "unit": "kg",
+      "price_per_unit": 220
+    },
+    {
+      "id": "po-item-2",
+      "purchase_order_id": "po-1",
+      "ingredient_id": "inv-paneer",
+      "quantity": 10,
+      "unit": "kg",
+      "price_per_unit": 320
+    },
+    {
+      "id": "po-item-3",
+      "purchase_order_id": "po-2",
+      "ingredient_id": "inv-cooking-oil",
+      "ingredient_name": "Refined Sunflower Oil",
+      "quantity": 30,
+      "unit": "L",
+      "price_per_unit": 130
+    },
+    {
+      "id": "po-item-1781765856867-8a6k",
+      "purchase_order_id": "po-1781765856867",
+      "ingredient_id": "inv-chicken",
+      "ingredient_name": "Chicken",
+      "quantity": 10,
+      "unit": "kg",
+      "price_per_unit": 220
+    }
+  ],
+  "orders": [
+    {
+      "id": "order-101",
+      "order_number": "QCK-0618-001",
+      "customer_name": "Amit Shah",
+      "customer_phone": "9840123456",
+      "total_amount": 620,
+      "status": "Delivered",
+      "priority": "Normal",
+      "order_date": "2026-06-18T09:15:00Z",
+      "delivery_address": "Flat 304, Royal Apartments, Adyar, Chennai - 600020",
+      "payment_status": "Paid",
+      "payment_method": "UPI",
+      "created_at": "2026-06-18T09:15:00Z"
+    },
+    {
+      "id": "order-102",
+      "order_number": "QCK-0618-002",
+      "customer_name": "Priya Mohan",
+      "customer_phone": "9840123457",
+      "total_amount": 340,
+      "status": "Out For Delivery",
+      "priority": "Normal",
+      "order_date": "2026-06-18T10:10:00Z",
+      "delivery_address": "New No. 12, Gandhi Nagar 2nd Street, Adyar, Chennai - 600020",
+      "payment_status": "Paid",
+      "payment_method": "Card",
+      "created_at": "2026-06-18T10:10:00Z"
+    },
+    {
+      "id": "order-103",
+      "order_number": "QCK-0618-003",
+      "customer_name": "Karthik Raja",
+      "customer_phone": "9840123458",
+      "total_amount": 900,
+      "status": "Ready",
+      "priority": "High",
+      "order_date": "2026-06-18T10:20:00Z",
+      "delivery_address": "Plot 45, Golden Jubilee Enclave, ECR, Chennai - 600041",
+      "payment_status": "Pending",
+      "payment_method": "Cash",
+      "created_at": "2026-06-18T10:20:00Z"
+    },
+    {
+      "id": "order-104",
+      "order_number": "QCK-0618-004",
+      "customer_name": "Sangeetha K.",
+      "customer_phone": "9840123459",
+      "total_amount": 420,
+      "status": "Ready",
+      "priority": "High",
+      "order_date": "2026-06-18T10:35:00Z",
+      "delivery_address": "Door 3B, Ceebros Heights, ECR, Chennai - 600041",
+      "payment_status": "Paid",
+      "payment_method": "UPI",
+      "created_at": "2026-06-18T10:35:00Z"
+    },
+    {
+      "id": "order-1024",
+      "order_number": "QCK-0618-1024",
+      "customer_name": "Rohan Mehra",
+      "customer_phone": "9876543220",
+      "total_amount": 480,
+      "status": "Delivered",
+      "priority": "Normal",
+      "order_date": "2026-06-18T19:00:00Z",
+      "delivery_address": "No. 4, Kasturibai Nagar, Adyar, Chennai - 600020",
+      "payment_status": "Paid",
+      "payment_method": "UPI",
+      "created_at": "2026-06-18T19:00:00Z"
+    }
+  ],
+  "order_items": [
+    {
+      "id": "o-item-1",
+      "order_id": "order-101",
+      "menu_item_id": "menu-1",
+      "menu_item_name": "Chicken Biryani",
+      "quantity": 2,
+      "price": 280,
+      "status": "Ready",
+      "special_instructions": "Make it extra spicy"
+    },
+    {
+      "id": "o-item-2",
+      "order_id": "order-101",
+      "menu_item_id": "menu-3",
+      "menu_item_name": "Butter Naan",
+      "quantity": 1,
+      "price": 60,
+      "status": "Ready"
+    },
+    {
+      "id": "o-item-3",
+      "order_id": "order-102",
+      "menu_item_id": "menu-2",
+      "menu_item_name": "Paneer Butter Masala",
+      "quantity": 1,
+      "price": 240,
+      "status": "Ready"
+    },
+    {
+      "id": "o-item-4",
+      "order_id": "order-102",
+      "menu_item_id": "menu-5",
+      "menu_item_name": "Gulab Jamun (2 Pcs)",
+      "quantity": 1,
+      "price": 80,
+      "status": "Ready"
+    },
+    {
+      "id": "o-item-5",
+      "order_id": "order-102",
+      "menu_item_id": "menu-6",
+      "menu_item_name": "Masala Chaas",
+      "quantity": 1,
+      "price": 50,
+      "status": "Ready"
+    },
+    {
+      "id": "o-item-6",
+      "order_id": "order-103",
+      "menu_item_id": "menu-1",
+      "menu_item_name": "Chicken Biryani",
+      "quantity": 2,
+      "price": 280,
+      "status": "Cooking"
+    },
+    {
+      "id": "o-item-7",
+      "order_id": "order-103",
+      "menu_item_id": "menu-3",
+      "menu_item_name": "Butter Naan",
+      "quantity": 4,
+      "price": 60,
+      "status": "Cooking"
+    },
+    {
+      "id": "o-item-8",
+      "order_id": "order-103",
+      "menu_item_id": "menu-5",
+      "menu_item_name": "Gulab Jamun (2 Pcs)",
+      "quantity": 1,
+      "price": 80,
+      "status": "Ready"
+    },
+    {
+      "id": "o-item-9",
+      "order_id": "order-104",
+      "menu_item_id": "menu-2",
+      "menu_item_name": "Paneer Butter Masala",
+      "quantity": 1,
+      "price": 240,
+      "status": "Pending"
+    },
+    {
+      "id": "o-item-10",
+      "order_id": "order-104",
+      "menu_item_id": "menu-3",
+      "menu_item_name": "Butter Naan",
+      "quantity": 3,
+      "price": 60,
+      "status": "Pending"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp-1",
+      "category": "Ingredients Stock",
+      "amount": 7600,
+      "description": "Stock purchase from Fresh Foods & Dairy Co.",
+      "expense_date": "2026-06-16",
+      "created_at": "2026-06-16T14:00:00Z"
+    },
+    {
+      "id": "exp-2",
+      "category": "Rent & Utilities",
+      "amount": 35000,
+      "description": "Monthly commercial kitchen rent for June 2026",
+      "expense_date": "2026-06-01",
+      "created_at": "2026-06-01T10:00:00Z"
+    },
+    {
+      "id": "exp-3",
+      "category": "Staff Salary",
+      "amount": 332000,
+      "description": "Consolidated salaries for employees (excluding Owner)",
+      "expense_date": "2026-06-05",
+      "created_at": "2026-06-05T18:00:00Z"
+    },
+    {
+      "id": "exp-4",
+      "category": "Marketing & Promotions",
+      "amount": 12000,
+      "description": "Instagram/Facebook ads for Biryani Festival",
+      "expense_date": "2026-06-10",
+      "created_at": "2026-06-10T11:00:00Z"
+    },
+    {
+      "id": "exp-1781764976987",
+      "category": "Ingredients Stock",
+      "amount": 3900,
+      "description": "Purchase Order receipt: po-2 from Metro Cash & Carry Bulk Hub",
+      "expense_date": "2026-06-18",
+      "created_at": "2026-06-18T06:42:56.987Z"
+    }
+  ],
+  "revenue": [
+    {
+      "id": "rev-1",
+      "order_id": "order-101",
+      "amount": 620,
+      "source": "UPI Delivery Order",
+      "revenue_date": "2026-06-18",
+      "created_at": "2026-06-18T09:15:00Z"
+    },
+    {
+      "id": "rev-2",
+      "order_id": "order-102",
+      "amount": 340,
+      "source": "Card Delivery Order",
+      "revenue_date": "2026-06-18",
+      "created_at": "2026-06-18T10:10:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "not-1",
+      "title": "Low Stock Warning",
+      "message": "Tomatoes stock is at 3kg. Reorder level is 8kg.",
+      "type": "WARNING",
+      "is_read": false,
+      "created_at": "2026-06-18T09:00:00Z"
+    },
+    {
+      "id": "not-2",
+      "title": "New High Priority Order",
+      "message": "Order QCK-0618-003 received with HIGH priority from Karthik Raja.",
+      "type": "CRITICAL",
+      "is_read": false,
+      "created_at": "2026-06-18T10:20:00Z"
+    }
+  ],
+  "activity_logs": [
+    {
+      "id": "log-1",
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Logged into the Owner portal.",
+      "created_at": "2026-06-18T09:15:00Z"
+    },
+    {
+      "id": "log-2",
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "ASSIGN_ORDER",
+      "details": "Assigned Order QCK-0618-003 to Chef Arun Kumar.",
+      "created_at": "2026-06-18T10:22:00Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781760441148",
+      "created_at": "2026-06-18T05:27:21.148Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1781760549098",
+      "created_at": "2026-06-18T05:29:09.098Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGIN",
+      "details": "Arvind Swamy logged in successfully.",
+      "id": "log-1781760558380",
+      "created_at": "2026-06-18T05:29:18.380Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGOUT",
+      "details": "Arvind Swamy logged out.",
+      "id": "log-1781760604044",
+      "created_at": "2026-06-18T05:30:04.044Z"
+    },
+    {
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGIN",
+      "details": "Sanjay Kapoor logged in successfully.",
+      "id": "log-1781760609798",
+      "created_at": "2026-06-18T05:30:09.798Z"
+    },
+    {
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGOUT",
+      "details": "Sanjay Kapoor logged out.",
+      "id": "log-1781760642888",
+      "created_at": "2026-06-18T05:30:42.888Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1781760647048",
+      "created_at": "2026-06-18T05:30:47.048Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1781760663892",
+      "created_at": "2026-06-18T05:31:03.892Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGIN",
+      "details": "Deepak Roy logged in successfully.",
+      "id": "log-1781760667463",
+      "created_at": "2026-06-18T05:31:07.463Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGOUT",
+      "details": "Deepak Roy logged out.",
+      "id": "log-1781760677761",
+      "created_at": "2026-06-18T05:31:17.761Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781764721075",
+      "created_at": "2026-06-18T06:38:41.075Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1781764989313",
+      "created_at": "2026-06-18T06:43:09.313Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1781764994147",
+      "created_at": "2026-06-18T06:43:14.147Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1781765393818",
+      "created_at": "2026-06-18T06:49:53.818Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781765396776",
+      "created_at": "2026-06-18T06:49:56.776Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1781765823878",
+      "created_at": "2026-06-18T06:57:03.878Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1781765829901",
+      "created_at": "2026-06-18T06:57:09.901Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1781765865257",
+      "created_at": "2026-06-18T06:57:45.257Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGIN",
+      "details": "Deepak Roy logged in successfully.",
+      "id": "log-1781765867844",
+      "created_at": "2026-06-18T06:57:47.844Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGOUT",
+      "details": "Deepak Roy logged out.",
+      "id": "log-1781765895660",
+      "created_at": "2026-06-18T06:58:15.660Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGIN",
+      "details": "Arun Kumar logged in successfully.",
+      "id": "log-1781765899160",
+      "created_at": "2026-06-18T06:58:19.160Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGOUT",
+      "details": "Arun Kumar logged out.",
+      "id": "log-1781765924510",
+      "created_at": "2026-06-18T06:58:44.510Z"
+    },
+    {
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGIN",
+      "details": "Sanjay Kapoor logged in successfully.",
+      "id": "log-1781765928163",
+      "created_at": "2026-06-18T06:58:48.163Z"
+    },
+    {
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGOUT",
+      "details": "Sanjay Kapoor logged out.",
+      "id": "log-1781765943975",
+      "created_at": "2026-06-18T06:59:03.975Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGIN",
+      "details": "Arun Kumar logged in successfully.",
+      "id": "log-1781765946576",
+      "created_at": "2026-06-18T06:59:06.576Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGOUT",
+      "details": "Arun Kumar logged out.",
+      "id": "log-1781766714534",
+      "created_at": "2026-06-18T07:11:54.534Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781766718546",
+      "created_at": "2026-06-18T07:11:58.546Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1781766735710",
+      "created_at": "2026-06-18T07:12:15.710Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGIN",
+      "details": "Deepak Roy logged in successfully.",
+      "id": "log-1781766740104",
+      "created_at": "2026-06-18T07:12:20.104Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGOUT",
+      "details": "Deepak Roy logged out.",
+      "id": "log-1781766763146",
+      "created_at": "2026-06-18T07:12:43.146Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1781766767264",
+      "created_at": "2026-06-18T07:12:47.264Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1781766789193",
+      "created_at": "2026-06-18T07:13:09.193Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781797354589",
+      "created_at": "2026-06-18T15:42:34.589Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1781797467773",
+      "created_at": "2026-06-18T15:44:27.773Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGIN",
+      "details": "Arvind Swamy logged in successfully.",
+      "id": "log-1781797475917",
+      "created_at": "2026-06-18T15:44:35.917Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGOUT",
+      "details": "Arvind Swamy logged out.",
+      "id": "log-1781797533932",
+      "created_at": "2026-06-18T15:45:33.932Z"
+    },
+    {
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGIN",
+      "details": "Sanjay Kapoor logged in successfully.",
+      "id": "log-1781797537471",
+      "created_at": "2026-06-18T15:45:37.471Z"
+    },
+    {
+      "user_id": "user-chef-head",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGOUT",
+      "details": "Sanjay Kapoor logged out.",
+      "id": "log-1781797576054",
+      "created_at": "2026-06-18T15:46:16.054Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGIN",
+      "details": "Arun Kumar logged in successfully.",
+      "id": "log-1781797581700",
+      "created_at": "2026-06-18T15:46:21.700Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGOUT",
+      "details": "Arun Kumar logged out.",
+      "id": "log-1781797596338",
+      "created_at": "2026-06-18T15:46:36.338Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1781797600249",
+      "created_at": "2026-06-18T15:46:40.249Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1781797621918",
+      "created_at": "2026-06-18T15:47:01.918Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGIN",
+      "details": "Deepak Roy logged in successfully.",
+      "id": "log-1781797625053",
+      "created_at": "2026-06-18T15:47:05.053Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGOUT",
+      "details": "Deepak Roy logged out.",
+      "id": "log-1781797636366",
+      "created_at": "2026-06-18T15:47:16.366Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1781797639057",
+      "created_at": "2026-06-18T15:47:19.057Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781798862503",
+      "created_at": "2026-06-18T16:07:42.503Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1781798914110",
+      "created_at": "2026-06-18T16:08:34.110Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1781800363452",
+      "created_at": "2026-06-18T16:32:43.452Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781800367375",
+      "created_at": "2026-06-18T16:32:47.375Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1781800845841",
+      "created_at": "2026-06-18T16:40:45.841Z"
+    }
+  ],
+  "kitchen_stations": [
+    {
+      "id": "station-1",
+      "name": "Tandoor Station",
+      "status": "Active"
+    },
+    {
+      "id": "station-2",
+      "name": "Gravy & Curry Station",
+      "status": "Active"
+    },
+    {
+      "id": "station-3",
+      "name": "Rice & Biryani Station",
+      "status": "Active"
+    },
+    {
+      "id": "station-4",
+      "name": "Chinese Fryer Station",
+      "status": "Active"
+    }
+  ],
+  "chef_assignments": [
+    {
+      "id": "assign-1",
+      "order_id": "order-103",
+      "order_number": "QCK-0618-003",
+      "chef_id": "staff-chef-1",
+      "chef_name": "Arun Kumar",
+      "assigned_at": "2026-06-18T10:22:00Z"
+    }
+  ],
+  "delivery_drivers": [
+    {
+      "id": "drv-1",
+      "employee_id": "DRV-001",
+      "full_name": "Ravi Kumar",
+      "phone_number": "9876543210",
+      "vehicle_number": "TN 19 AB 1234",
+      "vehicle_type": "Bike",
+      "status": "Available"
+    },
+    {
+      "id": "drv-2",
+      "employee_id": "DRV-002",
+      "full_name": "Amit Patel",
+      "phone_number": "9876543211",
+      "vehicle_number": "TN 19 CD 5678",
+      "vehicle_type": "Bike",
+      "status": "On Delivery"
+    },
+    {
+      "id": "drv-3",
+      "employee_id": "DRV-003",
+      "full_name": "Priya Sharma",
+      "phone_number": "9876543212",
+      "vehicle_number": "TN 19 EF 9012",
+      "vehicle_type": "Scooter",
+      "status": "Available"
+    }
+  ],
+  "deliveries": [
+    {
+      "id": "del-1024",
+      "order_id": "order-1024",
+      "driver_id": "drv-1",
+      "pickup_time": "2026-06-18T19:15:00Z",
+      "delivery_start_time": "2026-06-18T19:15:00Z",
+      "delivered_time": "2026-06-18T19:42:00Z",
+      "estimated_delivery_time": "2026-06-18T19:45:00Z",
+      "actual_delivery_time": "27",
+      "delivery_status": "Delivered",
+      "notes": "Delivered successfully at door step"
+    },
+    {
+      "id": "del-102",
+      "order_id": "order-102",
+      "driver_id": "drv-2",
+      "pickup_time": "2026-06-18T11:45:00Z",
+      "delivery_start_time": "2026-06-18T11:45:00Z",
+      "estimated_delivery_time": "2026-06-18T12:15:00Z",
+      "delivery_status": "Out For Delivery",
+      "notes": "Prepaid card order"
+    }
+  ],
+  "supplier_deliveries": [
+    {
+      "id": "sdel-1",
+      "purchase_order_id": "po-1",
+      "supplier_id": "sup-1",
+      "supplier_name": "Fresh Foods & Dairy Co.",
+      "source_warehouse": "Koyambedu Market Warehouse",
+      "truck_number": "TN 09 AB 5678",
+      "driver_name": "Rajesh Kumar",
+      "driver_phone": "9876543210",
+      "dispatch_time": "2026-06-18T00:30:00Z",
+      "arrival_time": "2026-06-18T02:45:00Z",
+      "estimated_arrival_time": "2026-06-18T02:30:00Z",
+      "status": "Delivered",
+      "delivery_notes": "All items received in good condition. Tomatoes fresh batch from this morning.",
+      "invoice_number": "INV-FFC-20260618-001",
+      "invoice_amount": 7600,
+      "products": [
+        {
+          "ingredient_id": "inv-tomatoes",
+          "ingredient_name": "Tomatoes",
+          "quantity_ordered": 50,
+          "quantity_received": 50,
+          "unit": "kg",
+          "batch_number": "BTH-TOM-2026-618A",
+          "expiry_date": "2026-06-22",
+          "status": "Good"
+        },
+        {
+          "ingredient_id": "inv-onions",
+          "ingredient_name": "Onions",
+          "quantity_ordered": 30,
+          "quantity_received": 30,
+          "unit": "kg",
+          "batch_number": "BTH-ONI-2026-618A",
+          "expiry_date": "2026-06-28",
+          "status": "Good"
+        },
+        {
+          "ingredient_id": "inv-chicken",
+          "ingredient_name": "Chicken",
+          "quantity_ordered": 20,
+          "quantity_received": 18,
+          "unit": "kg",
+          "batch_number": "BTH-CHK-2026-618A",
+          "expiry_date": "2026-06-20",
+          "status": "Damaged"
+        }
+      ],
+      "created_at": "2026-06-18T00:00:00Z"
+    },
+    {
+      "id": "sdel-2",
+      "purchase_order_id": "po-2",
+      "supplier_id": "sup-2",
+      "supplier_name": "Metro Cash & Carry Bulk Hub",
+      "source_warehouse": "Poonamallee Bulk Warehouse",
+      "truck_number": "TN 04 CD 9012",
+      "driver_name": "Suresh Pillai",
+      "driver_phone": "9944332211",
+      "dispatch_time": "2026-06-18T04:00:00Z",
+      "arrival_time": "2026-06-18T05:30:00Z",
+      "estimated_arrival_time": "2026-06-18T05:00:00Z",
+      "status": "Delivered",
+      "delivery_notes": "Cooking oil delivered, packaging intact.",
+      "invoice_number": "INV-MCB-20260618-002",
+      "invoice_amount": 3900,
+      "products": [
+        {
+          "ingredient_id": "inv-cooking-oil",
+          "ingredient_name": "Refined Sunflower Oil",
+          "quantity_ordered": 30,
+          "quantity_received": 30,
+          "unit": "L",
+          "batch_number": "BTH-OIL-2026-618B",
+          "expiry_date": "2027-06-18",
+          "status": "Good"
+        }
+      ],
+      "created_at": "2026-06-18T04:00:00Z"
+    },
+    {
+      "id": "sdel-3",
+      "purchase_order_id": "po-1781765856867",
+      "supplier_id": "sup-1",
+      "supplier_name": "Fresh Foods & Dairy Co.",
+      "source_warehouse": "Koyambedu Market Warehouse",
+      "truck_number": "TN 09 AB 5678",
+      "driver_name": "Rajesh Kumar",
+      "driver_phone": "9876543210",
+      "dispatch_time": "2026-06-18T05:00:00Z",
+      "estimated_arrival_time": "2026-06-18T07:00:00Z",
+      "status": "Delayed",
+      "delivery_notes": "Delayed due to traffic at Koyambedu junction.",
+      "invoice_number": "INV-FFC-20260618-003",
+      "invoice_amount": 2200,
+      "products": [
+        {
+          "ingredient_id": "inv-chicken",
+          "ingredient_name": "Chicken",
+          "quantity_ordered": 10,
+          "quantity_received": 0,
+          "unit": "kg",
+          "batch_number": "",
+          "expiry_date": "",
+          "status": "Pending"
+        }
+      ],
+      "created_at": "2026-06-18T05:00:00Z"
+    },
+    {
+      "id": "sdel-4",
+      "supplier_id": "sup-2",
+      "supplier_name": "Metro Cash & Carry Bulk Hub",
+      "source_warehouse": "Poonamallee Bulk Warehouse",
+      "truck_number": "TN 04 EF 3456",
+      "driver_name": "Karthik Rajan",
+      "driver_phone": "9977665544",
+      "dispatch_time": "2026-06-17T03:30:00Z",
+      "arrival_time": "2026-06-17T05:45:00Z",
+      "estimated_arrival_time": "2026-06-17T05:00:00Z",
+      "status": "Delivered",
+      "delivery_notes": "Yesterday delivery - basmati rice batch.",
+      "invoice_number": "INV-MCB-20260617-001",
+      "invoice_amount": 4500,
+      "products": [
+        {
+          "ingredient_id": "inv-basmati-rice",
+          "ingredient_name": "Basmati Rice",
+          "quantity_ordered": 50,
+          "quantity_received": 50,
+          "unit": "kg",
+          "batch_number": "BTH-RIC-2026-617A",
+          "expiry_date": "2027-06-17",
+          "status": "Good"
+        }
+      ],
+      "created_at": "2026-06-17T03:30:00Z"
+    }
+  ]
+}

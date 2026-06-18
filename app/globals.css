@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ─── LIGHT MODE (default) ────────────────────────────────── */
+  :root {
+    --background: 0 0% 100%;           /* #FFFFFF - pure white page bg */
+    --foreground: 222 47% 11%;         /* #111827 - near-black text */
+
+    --card: 210 17% 98%;               /* #F8F9FA - light gray card bg */
+    --card-foreground: 222 47% 11%;    /* #111827 */
+    --label: 217 19% 27%;              /* #374151 - dark labels */
+
+    --popover: 0 0% 100%;              /* white */
+    --popover-foreground: 222 47% 11%; /* #111827 */
+
+    --primary: 142.1 76.2% 36.3%;     /* emerald-600 */
+    --primary-foreground: 355.7 100% 97.3%;
+
+    --secondary: 220 14% 93%;          /* #E9EBEE */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 93%;              /* #E9EBEE - muted surface */
+    --muted-foreground: 215 16% 47%;   /* #6B7280 - placeholder/caption text */
+
+    --accent: 220 14% 90%;             /* #E2E4E9 - hover accent */
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 86%;             /* #D1D5DB - input & card borders */
+    --input: 220 13% 86%;              /* same as border */
+    --ring: 142.1 76.2% 36.3%;
+
+    --radius: 0.625rem;
+
+    --chart-1: 142.1 76.2% 36.3%;
+    --chart-2: 221.2 83.2% 53.3%;
+    --chart-3: 47.9 95.8% 51.2%;
+    --chart-4: 262.1 83.3% 57.8%;
+    --chart-5: 22 84% 50%;
+
+    --sidebar-background: 220 14% 96%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 142.1 76.2% 36.3%;
+    --sidebar-primary-foreground: 355.7 100% 97.3%;
+    --sidebar-accent: 220 14% 90%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 86%;
+    --sidebar-ring: 142.1 76.2% 36.3%;
+  }
+
+  /* ─── DARK MODE ───────────────────────────────────────────── */
+  .dark {
+    --background: 240 10% 3.9%;       /* #0a0a0f - very dark */
+    --foreground: 0 0% 98%;           /* near-white */
+
+    --card: 240 6% 10%;               /* zinc-900 equiv */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 142.1 70.6% 45.3%;    /* emerald-500 */
+    --primary-foreground: 144.4 96.6% 11.4%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;         /* zinc-800 */
+    --muted-foreground: 240 5% 64.9%; /* zinc-400 */
+
+    --accent: 240 3.7% 20%;           /* zinc-700 */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 17%;           /* zinc-800 border */
+    --input: 240 3.7% 15.9%;
+    --ring: 142.1 70.6% 45.3%;
+
+    --chart-1: 142.1 70.6% 45.3%;
+    --chart-2: 217.2 91.2% 59.8%;
+    --chart-3: 47.9 95.8% 51.2%;
+    --chart-4: 262.1 83.3% 57.8%;
+    --chart-5: 22 84% 50%;
+
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 240 5% 84.9%;
+    --sidebar-primary: 142.1 70.6% 45.3%;
+    --sidebar-primary-foreground: 144.4 96.6% 11.4%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 5% 84.9%;
+    --sidebar-border: 240 3.7% 17%;
+    --sidebar-ring: 142.1 70.6% 45.3%;
+    --label: 240 5% 84.9%;             /* zinc-300 */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* ── Input autofill fix for light mode ── */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+    caret-color: hsl(var(--foreground));
+  }
+}
+
+/* ─── Glass / Glassmorphism ──────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:root:not(.dark) .glass {
+  background: rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.glass-card {
+  background: hsl(var(--card));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border));
+}
+
+/* ─── Glow Effects ───────────────────────────────────────── */
+.glow-sm {
+  box-shadow: 0 0 10px -3px rgba(16, 185, 129, 0.1);
+}
+
+.dark .glow-sm {
+  box-shadow: 0 0 10px -3px rgba(16, 185, 129, 0.15);
+}
+
+.glow-md {
+  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.15);
+}
+
+.dark .glow-md {
+  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.25);
+}
+
+/* ─── Text Gradient ──────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--muted-foreground)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Card Hover ─────────────────────────────────────────── */
+.transition-all-200 {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover {
+  @apply transition-all-200 hover:translate-y-[-2px] hover:border-primary/20 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)];
+}
+
+.dark .card-hover {
+  @apply transition-all-200 hover:translate-y-[-2px] hover:border-primary/25 hover:shadow-[0_8px_30px_rgba(16,185,129,0.05)];
+}
+
+/* ─── Custom Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
+}
+
+/* ─── Focus ring for accessibility ──────────────────────── */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
