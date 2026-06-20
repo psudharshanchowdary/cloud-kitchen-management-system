@@ -14,12 +14,12 @@ export function MobileNav() {
 
   // Custom tabs based on role
   const tabs = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     ...(user.role === "Owner" || user.role === "Operations Manager" || user.role === "Head Chef"
       ? [{ name: "Orders", href: "/orders", icon: ShoppingBag }] 
       : []),
     ...(user.role === "Owner" || user.role === "Operations Manager" || user.role === "Head Chef" || user.role === "Chef" || user.role === "Kitchen Assistant"
-      ? [{ name: "Kitchen", href: "/kitchen", icon: ChefHat }] 
+      ? [{ name: "Kitchen Queue", href: "/kitchen", icon: ChefHat }] 
       : []),
     ...(user.role === "Owner" || user.role === "Operations Manager" || user.role === "Inventory Manager"
       ? [{ name: "Inventory", href: "/inventory", icon: Package }] 
@@ -28,10 +28,10 @@ export function MobileNav() {
       ? [{ name: "Packing", href: "/packing", icon: Box }] 
       : []),
     ...(user.role === "Owner" || user.role === "Operations Manager" || user.role === "Inventory Manager"
-      ? [{ name: "Logistics", href: "/supplier-logistics", icon: Package }] 
+      ? [{ name: "Supplier Deliveries", href: "/supplier-logistics", icon: Package }] 
       : []),
     ...(user.role === "Owner" || user.role === "Operations Manager"
-      ? [{ name: "Delivery", href: "/delivery", icon: Truck }] 
+      ? [{ name: "Delivery Ops", href: "/delivery", icon: Truck }] 
       : []),
     { name: "Settings", href: "/settings", icon: Settings }
   ].filter((t, index, self) => self.findIndex(o => o.href === t.href) === index); // Deduplicate

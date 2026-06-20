@@ -5,6 +5,7 @@ import { getStaffList, createStaffMember, updateStaffMember } from "@/actions/st
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { USER_ROLES } from "@/lib/constants";
@@ -104,15 +105,15 @@ export default function StaffPage() {
   return (
     <div className="space-y-6 pb-8 relative min-h-[80vh]">
       <PageHeader 
-        title="Staff Directory" 
-        description="Oversee cloud kitchen workers, assign organizational roles, and monitor payroll wages."
-        category="Team Management"
+        title="Team Members" 
+        description="Oversee cloud kitchen staff, assign roles, and monitor rosters."
+        category="Kitchen Crew"
         actions={
           <button 
             onClick={() => setAddOpen(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs rounded-xl shadow-lg transition-all active:scale-95"
           >
-            <Plus className="h-4 w-4" /> Add Staff Member
+            <Plus className="h-4 w-4" /> Add Team Member
           </button>
         }
       />
@@ -240,147 +241,120 @@ export default function StaffPage() {
       )}
 
       {/* Add Staff Modal */}
-      <AnimatePresence>
-        {addOpen && (
+      <Modal
+        isOpen={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add Team Member"
+        maxWidth="md"
+        footer={
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+            <button
+              type="button"
               onClick={() => setAddOpen(false)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md bg-card border border-border shadow-2xl rounded-2xl z-50 max-h-[90vh] flex flex-col overflow-hidden"
+              className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             >
-              <form onSubmit={handleCreateStaff} className="flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                  <h3 className="text-base font-bold text-foreground">Add Staff Member</h3>
-                  <button 
-                    type="button"
-                    onClick={() => setAddOpen(false)}
-                    className="p-1.5 bg-muted hover:bg-accent text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                      placeholder="e.g. Sanjay Kapoor"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Email</label>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                        placeholder="e.g. chef@queenskitchen.com"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Phone</label>
-                      <input
-                        type="text"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                        placeholder="e.g. 9840123456"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Role</label>
-                      <select
-                        value={role}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setRole(val);
-                          if (val === "Owner") {
-                            setSalary("0");
-                          }
-                        }}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                      >
-                        {Object.values(USER_ROLES)
-                          .filter(r => r !== "Owner" || currentUser?.role === "Owner")
-                          .map(r => (
-                            <option key={r} value={r}>{r}</option>
-                          ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Monthly Salary (₹)</label>
-                      <input
-                        type="number"
-                        required
-                        disabled={role === "Owner"}
-                        value={role === "Owner" ? "0" : salary}
-                        onChange={(e) => setSalary(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                        placeholder={role === "Owner" ? "Profit Share" : "e.g. 45000"}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Joining Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={joiningDate}
-                      onChange={(e) => setJoiningDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-end items-center gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                  <button
-                    type="button"
-                    onClick={() => setAddOpen(false)}
-                    className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitLoading}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
-                  >
-                    {submitLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Save & Assign Portal"
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="add-staff-form"
+              disabled={submitLoading}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
+            >
+              {submitLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save & Assign Portal"
+              )}
+            </button>
           </>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <form id="add-staff-form" onSubmit={handleCreateStaff} className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Full Name</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+              placeholder="e.g. Sanjay Kapoor"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                placeholder="e.g. chef@queenskitchen.com"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Phone</label>
+              <input
+                type="text"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                placeholder="e.g. 9840123456"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Role</label>
+              <select
+                value={role}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setRole(val);
+                  if (val === "Owner") {
+                    setSalary("0");
+                  }
+                }}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+              >
+                {Object.values(USER_ROLES)
+                  .filter(r => r !== "Owner" || currentUser?.role === "Owner")
+                  .map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Monthly Salary (₹)</label>
+              <input
+                type="number"
+                required
+                disabled={role === "Owner"}
+                value={role === "Owner" ? "0" : salary}
+                onChange={(e) => setSalary(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder={role === "Owner" ? "Profit Share" : "e.g. 45000"}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Joining Date</label>
+            <input
+              type="date"
+              required
+              value={joiningDate}
+              onChange={(e) => setJoiningDate(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

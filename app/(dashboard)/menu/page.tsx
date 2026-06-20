@@ -6,14 +6,17 @@ import { getInventoryList } from "@/actions/inventory";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { MENU_CATEGORIES } from "@/lib/constants";
 import { Plus, Search, Edit2, Trash2, Eye, EyeOff, X, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/stores/auth-store";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function MenuPage() {
+  const user = useAuthStore((state) => state.user);
   const [items, setItems] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,7 @@ export default function MenuPage() {
   const [kitchenStation, setKitchenStation] = useState("Main Kitchen");
   const [autoDeduct, setAutoDeduct] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [savingStatus, setSavingStatus] = useState<"Draft" | "Pending Approval" | "Approved" | "Active">("Draft");
 
   // Delete Confirm Dialog state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -59,7 +63,7 @@ export default function MenuPage() {
       setEditingId(item.id);
       setName(item.name);
       setCategory(item.category);
-      setPrice(item.price.toString());
+      setPrice(item.price ? item.price.toString() : "");
       setDescription(item.description || "");
       setIsVeg(item.is_vegetarian);
       setPrepTime(item.preparation_time.toString());
@@ -67,8 +71,9 @@ export default function MenuPage() {
         ingredient_id: ing.ingredient_id,
         quantity: ing.quantity
       })));
-      setKitchenStation("Main Kitchen");
+      setKitchenStation(item.kitchen_station || "Main Kitchen");
       setAutoDeduct(true);
+      setSavingStatus(item.status || "Draft");
       setModalOpen(true);
     } catch (err) {
       toast.error("Failed to load recipe details");
@@ -88,7 +93,41 @@ export default function MenuPage() {
     setRecipe([]);
     setKitchenStation("Main Kitchen");
     setAutoDeduct(true);
+    setSavingStatus("Draft");
     setModalOpen(true);
+  };
+
+  const handleReviewTransition = async (newStatus: "Draft" | "Approved" | "Active") => {
+    if (!editingId) return;
+    if (newStatus === "Approved" && (!price || Number(price) <= 0)) {
+      toast.error("Please set a valid Selling Price before approving");
+      return;
+    }
+    setSaveLoading(true);
+    try {
+      const currentItem = items.find(m => m.id === editingId);
+      const itemData = {
+        name,
+        category,
+        price: price ? Number(price) : 0,
+        description,
+        is_vegetarian: isVeg,
+        is_available: currentItem?.is_available ?? true,
+        preparation_time: Number(prepTime),
+        kitchen_station: kitchenStation,
+        recipe_cost: recipeCost,
+        status: newStatus
+      };
+
+      const res = await saveMenuItem(itemData, recipe, editingId);
+      setItems(items.map(m => m.id === editingId ? res : m));
+      toast.success(`Menu item status updated to: ${newStatus}`);
+      setModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update item status");
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
@@ -98,16 +137,33 @@ export default function MenuPage() {
       return;
     }
 
+    if (user?.role !== "Head Chef" && (!price || Number(price) <= 0)) {
+      toast.error("Please set a valid Selling Price");
+      return;
+    }
+
     setSaveLoading(true);
     try {
+      let finalStatus = savingStatus;
+      if (user?.role === "Head Chef") {
+        finalStatus = savingStatus === "Pending Approval" ? "Pending Approval" : "Draft";
+      } else if (user?.role === "Operations Manager") {
+        finalStatus = "Approved";
+      } else if (user?.role === "Owner") {
+        finalStatus = "Active";
+      }
+
       const itemData = {
         name,
         category,
-        price: Number(price),
+        price: price ? Number(price) : 0,
         description,
         is_vegetarian: isVeg,
-        is_available: true,
-        preparation_time: Number(prepTime)
+        is_available: editingId ? (items.find(m => m.id === editingId)?.is_available ?? true) : true,
+        preparation_time: Number(prepTime),
+        kitchen_station: kitchenStation,
+        recipe_cost: recipeCost,
+        status: finalStatus
       };
 
       const res = await saveMenuItem(itemData, recipe, editingId);
@@ -248,8 +304,26 @@ export default function MenuPage() {
             >
               <div>
                 <div className="flex justify-between items-start mb-3">
-                  <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{item.category}</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{item.category}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border inline-block w-fit ${
+                      item.status === "Draft" 
+                        ? "bg-muted text-muted-foreground border-border" 
+                        : item.status === "Pending Approval"
+                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                        : item.status === "Approved"
+                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                    }`}>
+                      {item.status || "Active"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {item.kitchen_station && (
+                      <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border" title="Kitchen Station">
+                        {item.kitchen_station}
+                      </span>
+                    )}
                     <span className={`h-2 w-2 rounded-full ${item.is_vegetarian ? 'bg-emerald-500' : 'bg-red-500'}`} title={item.is_vegetarian ? "Veg" : "Non-Veg"} />
                     <span className="text-[10px] text-muted-foreground font-bold">{item.preparation_time} min</span>
                   </div>
@@ -263,17 +337,19 @@ export default function MenuPage() {
                 <span className="text-base font-extrabold text-emerald-500">{formatCurrency(item.price)}</span>
                 
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleToggleAvailability(item.id, !item.is_available)}
-                    className={`p-1.5 rounded-lg border transition-colors ${
-                      item.is_available 
-                        ? "bg-muted border-border text-muted-foreground hover:text-foreground" 
-                        : "bg-amber-500/10 border-amber-500/20 text-amber-500"
-                    }`}
-                    title={item.is_available ? "Disable Item" : "Enable Item"}
-                  >
-                    {item.is_available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </button>
+                  {(user?.role === "Owner" || user?.role === "Operations Manager") && (
+                    <button
+                      onClick={() => handleToggleAvailability(item.id, !item.is_available)}
+                      className={`p-1.5 rounded-lg border transition-colors ${
+                        item.is_available 
+                          ? "bg-muted border-border text-muted-foreground hover:text-foreground" 
+                          : "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                      }`}
+                      title={item.is_available ? "Disable Item" : "Enable Item"}
+                    >
+                      {item.is_available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    </button>
+                  )}
 
                   <button
                     onClick={() => handleEditClick(item)}
@@ -283,13 +359,15 @@ export default function MenuPage() {
                     <Edit2 className="h-4 w-4" />
                   </button>
 
-                  <button
-                    onClick={() => setDeleteId(item.id)}
-                    className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 rounded-lg transition-colors"
-                    title="Delete Item"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {user?.role === "Owner" && (
+                    <button
+                      onClick={() => setDeleteId(item.id)}
+                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 rounded-lg transition-colors"
+                      title="Delete Item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -308,262 +386,317 @@ export default function MenuPage() {
         variant="danger"
       />
 
-      {/* Add / Edit Modal Drawer */}
-      <AnimatePresence>
-        {modalOpen && (
+      {/* Add / Edit Modal */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingId ? "Edit Menu Item" : "Add Menu Item"}
+        maxWidth="2xl"
+        footer={
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+            <button
+              type="button"
               onClick={() => setModalOpen(false)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-2xl bg-card border border-border shadow-2xl rounded-2xl z-50 max-h-[90vh] flex flex-col overflow-hidden"
+              className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             >
-              <form onSubmit={handleSaveItem} className="flex flex-col max-h-[90vh]">
-                {/* Header (Sticky/Fixed) */}
-                <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                  <h3 className="text-base font-bold text-foreground">{editingId ? "Edit Menu Item" : "Add Menu Item"}</h3>
-                  <button 
+              Cancel
+            </button>
+            {user?.role === "Head Chef" && (
+              <>
+                <button
+                  type="submit"
+                  form="menu-item-form"
+                  onClick={() => setSavingStatus("Draft")}
+                  disabled={saveLoading}
+                  className="px-4 py-2 bg-muted hover:bg-accent border border-border text-foreground font-semibold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                >
+                  {saveLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save as Draft"}
+                </button>
+                <button
+                  type="submit"
+                  form="menu-item-form"
+                  onClick={() => setSavingStatus("Pending Approval")}
+                  disabled={saveLoading}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95"
+                >
+                  {saveLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit for Approval"}
+                </button>
+              </>
+            )}
+            {user?.role === "Operations Manager" && (
+              <>
+                {editingId && items.find(m => m.id === editingId)?.status === "Pending Approval" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleReviewTransition("Draft")}
+                      disabled={saveLoading}
+                      className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 font-semibold text-xs rounded-xl shadow-md transition-all active:scale-95 mr-auto"
+                    >
+                      Reject to Draft
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleReviewTransition("Approved")}
+                      disabled={saveLoading}
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95"
+                    >
+                      Approve & Set Price
+                    </button>
+                  </>
+                )}
+                <button
+                  type="submit"
+                  form="menu-item-form"
+                  onClick={() => setSavingStatus("Approved")}
+                  disabled={saveLoading}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95"
+                >
+                  {saveLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                </button>
+              </>
+            )}
+            {user?.role === "Owner" && (
+              <>
+                {editingId && items.find(m => m.id === editingId)?.status === "Approved" && (
+                  <button
                     type="button"
-                    onClick={() => setModalOpen(false)}
-                    className="p-1.5 bg-muted hover:bg-accent text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors"
+                    onClick={() => handleReviewTransition("Active")}
+                    disabled={saveLoading}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95 mr-auto"
                   >
-                    <X className="h-4 w-4" />
+                    Publish to Menu
                   </button>
+                )}
+                <button
+                  type="submit"
+                  form="menu-item-form"
+                  onClick={() => setSavingStatus("Active")}
+                  disabled={saveLoading}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95"
+                >
+                  {saveLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    editingId ? "Save Menu Item" : "Create Menu Item"
+                  )}
+                </button>
+              </>
+            )}
+          </>
+        }
+      >
+        <form id="menu-item-form" onSubmit={handleSaveItem} className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Basic Information</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Item Name</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                  placeholder="e.g. Butter Paneer"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                >
+                  {MENU_CATEGORIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                <input
+                  type="checkbox"
+                  checked={isVeg}
+                  onChange={(e) => setIsVeg(e.target.checked)}
+                  className="rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background"
+                />
+                Is Vegetarian Product
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs resize-none"
+                placeholder="Enter short appetizing descriptions..."
+              />
+            </div>
+          </div>
+
+          {/* Pricing */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Pricing</h4>
+            <div className={cn(
+              "grid grid-cols-1 gap-4",
+              user?.role === "Owner" ? "md:grid-cols-3" : "md:grid-cols-2"
+            )}>
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
+                  Selling Price (₹) {user?.role === "Head Chef" && "(OM / Owner sets this)"}
+                </label>
+                <input
+                  type="number"
+                  required={user?.role !== "Head Chef"}
+                  disabled={user?.role === "Head Chef"}
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className={cn(
+                    "w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs",
+                    user?.role === "Head Chef" && "bg-muted text-muted-foreground cursor-not-allowed"
+                  )}
+                  placeholder={user?.role === "Head Chef" ? "To be determined..." : "e.g. 250"}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Cost Price (₹)</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={recipeCost.toFixed(2)}
+                  className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-muted-foreground text-xs font-medium cursor-not-allowed"
+                />
+              </div>
+              {user?.role === "Owner" && (
+                <div>
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Profit Margin</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={price && Number(price) > 0 ? `${Math.round(((Number(price) - recipeCost) / Number(price)) * 100)}%` : "N/A"}
+                    className={cn(
+                      "w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-bold cursor-not-allowed",
+                      price && Number(price) - recipeCost > 0 ? "text-emerald-500" : "text-rose-500"
+                    )}
+                  />
                 </div>
+              )}
+            </div>
+          </div>
 
-                {/* Form Content (Scrollable) */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Basic Information</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Item Name</label>
-                        <input
-                          type="text"
-                          required
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                          placeholder="e.g. Butter Paneer"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Category</label>
-                        <select
-                          value={category}
-                          onChange={(e) => setCategory(e.target.value)}
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                        >
-                          {MENU_CATEGORIES.map(c => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                        <input
-                          type="checkbox"
-                          checked={isVeg}
-                          onChange={(e) => setIsVeg(e.target.checked)}
-                          className="rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background"
-                        />
-                        Is Vegetarian Product
-                      </label>
-                    </div>
+          {/* Preparation */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Preparation</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Prep Time (mins)</label>
+                <input
+                  type="number"
+                  required
+                  value={prepTime}
+                  onChange={(e) => setPrepTime(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                  placeholder="e.g. 20"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Kitchen Station</label>
+                <select
+                  value={kitchenStation}
+                  onChange={(e) => setKitchenStation(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                >
+                  <option value="Main Kitchen">Main Kitchen</option>
+                  <option value="Salad Station">Salad Station</option>
+                  <option value="Dessert Station">Dessert Station</option>
+                  <option value="Beverage Station">Beverage Station</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Description</label>
-                      <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs resize-none"
-                        placeholder="Enter short appetizing descriptions..."
+          {/* Recipe Ingredients */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b border-border/50 pb-1">
+              <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Recipe Ingredients</h4>
+              <button
+                type="button"
+                onClick={addRecipeRow}
+                className="text-xs text-emerald-500 hover:underline flex items-center gap-0.5"
+              >
+                <Plus className="h-3 w-3" /> Add Ingredient
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {recipe.length === 0 ? (
+                <p className="text-center text-[10px] text-muted-foreground py-6">No ingredients mapped yet.</p>
+              ) : (
+                recipe.map((row, index) => {
+                  const inv = inventory.find(i => i.id === row.ingredient_id);
+                  return (
+                    <div key={index} className="flex gap-2 items-center p-2 bg-background border border-border rounded-xl">
+                      <select
+                        value={row.ingredient_id}
+                        onChange={(e) => updateRecipeRow(index, "ingredient_id", e.target.value)}
+                        className="flex-1 bg-card border border-border rounded p-1.5 text-xs text-foreground focus:outline-none"
+                      >
+                        {inventory.map(i => (
+                          <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
+                        ))}
+                      </select>
+                      
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={row.quantity}
+                        onChange={(e) => updateRecipeRow(index, "quantity", Number(e.target.value))}
+                        className="w-20 bg-card border border-border rounded p-1.5 text-xs text-foreground text-center focus:outline-none"
                       />
-                    </div>
-                  </div>
+                      
+                      <span className="text-[10px] text-muted-foreground uppercase w-12 text-center">{inv?.unit}</span>
 
-                  {/* Pricing */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Pricing</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Selling Price (₹)</label>
-                        <input
-                          type="number"
-                          required
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                          placeholder="e.g. 250"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Cost Price (₹)</label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={recipeCost.toFixed(2)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-muted-foreground text-xs font-medium cursor-not-allowed"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Profit Margin</label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={price && Number(price) > 0 ? `${Math.round(((Number(price) - recipeCost) / Number(price)) * 100)}%` : "N/A"}
-                          className={`w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-bold cursor-not-allowed ${
-                            price && Number(price) - recipeCost > 0 ? "text-emerald-500" : "text-rose-500"
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Preparation */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Preparation</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Prep Time (mins)</label>
-                        <input
-                          type="number"
-                          required
-                          value={prepTime}
-                          onChange={(e) => setPrepTime(e.target.value)}
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                          placeholder="e.g. 20"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Kitchen Station</label>
-                        <select
-                          value={kitchenStation}
-                          onChange={(e) => setKitchenStation(e.target.value)}
-                          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                        >
-                          <option value="Main Kitchen">Main Kitchen</option>
-                          <option value="Salad Station">Salad Station</option>
-                          <option value="Dessert Station">Dessert Station</option>
-                          <option value="Beverage Station">Beverage Station</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recipe Ingredients */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center border-b border-border/50 pb-1">
-                      <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider">Recipe Ingredients</h4>
                       <button
                         type="button"
-                        onClick={addRecipeRow}
-                        className="text-xs text-emerald-500 hover:underline flex items-center gap-0.5"
+                        onClick={() => removeRecipeRow(index)}
+                        className="p-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded border border-rose-500/20 transition-colors"
                       >
-                        <Plus className="h-3 w-3" /> Add Ingredient
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
 
-                    <div className="space-y-2">
-                      {recipe.length === 0 ? (
-                        <p className="text-center text-[10px] text-muted-foreground py-6">No ingredients mapped yet.</p>
-                      ) : (
-                        recipe.map((row, index) => {
-                          const inv = inventory.find(i => i.id === row.ingredient_id);
-                          return (
-                            <div key={index} className="flex gap-2 items-center p-2 bg-background border border-border rounded-xl">
-                              <select
-                                value={row.ingredient_id}
-                                onChange={(e) => updateRecipeRow(index, "ingredient_id", e.target.value)}
-                                className="flex-1 bg-card border border-border rounded p-1.5 text-xs text-foreground focus:outline-none"
-                              >
-                                {inventory.map(i => (
-                                  <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
-                                ))}
-                              </select>
-                              
-                              <input
-                                type="number"
-                                step="0.001"
-                                value={row.quantity}
-                                onChange={(e) => updateRecipeRow(index, "quantity", Number(e.target.value))}
-                                className="w-20 bg-card border border-border rounded p-1.5 text-xs text-foreground text-center focus:outline-none"
-                              />
-                              
-                              <span className="text-[10px] text-muted-foreground uppercase w-12 text-center">{inv?.unit}</span>
-
-                              <button
-                                type="button"
-                                onClick={() => removeRecipeRow(index)}
-                                className="p-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded border border-rose-500/20 transition-colors"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Inventory Mapping */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Inventory Mapping</h4>
-                    <div className="flex items-center justify-between p-3.5 bg-background border border-border rounded-xl">
-                      <div className="space-y-0.5 pr-4">
-                        <label className="text-xs font-semibold text-foreground">Auto Deduct Inventory</label>
-                        <p className="text-[10px] text-muted-foreground">Automatically deduct ingredients from inventory when this item is ordered.</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input 
-                          type="checkbox" 
-                          checked={autoDeduct} 
-                          onChange={(e) => setAutoDeduct(e.target.checked)} 
-                          className="sr-only peer" 
-                        />
-                        <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer (Sticky/Fixed) */}
-                <div className="flex justify-end items-center gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(false)}
-                    className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saveLoading}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
-                  >
-                    {saveLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      editingId ? "Save Menu Item" : "Create Menu Item"
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          {/* Inventory Mapping */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-wider border-b border-border/50 pb-1">Inventory Mapping</h4>
+            <div className="flex items-center justify-between p-3.5 bg-background border border-border rounded-xl">
+              <div className="space-y-0.5 pr-4">
+                <label className="text-xs font-semibold text-foreground">Auto Deduct Inventory</label>
+                <p className="text-[10px] text-muted-foreground">Automatically deduct ingredients from inventory when this item is ordered.</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input 
+                  type="checkbox" 
+                  checked={autoDeduct} 
+                  onChange={(e) => setAutoDeduct(e.target.checked)} 
+                  className="sr-only peer" 
+                />
+                <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

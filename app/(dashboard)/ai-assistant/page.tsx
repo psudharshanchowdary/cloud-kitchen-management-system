@@ -47,9 +47,9 @@ export default function AIAssistantPage() {
   return (
     <div className="space-y-6 pb-8 h-[82vh] flex flex-col justify-between">
       <PageHeader 
-        title="AI Business Assistant" 
-        description="Ask operational questions, analyze kitchen rush trends, and get stock procurement forecasts."
-        category="Artificial Intelligence"
+        title="Daily Kitchen Briefing" 
+        description="Ask your operations assistant questions about order queues, shortages, delayed tickets, and supplier deliveries."
+        category="Kitchen Intelligence"
       />
 
       {/* Messages Scroll Area */}

@@ -224,7 +224,11 @@ export const db = {
   // --- Menu Items ---
   getMenuItems: async (): Promise<MenuItem[]> => {
     const data = readDb();
-    return data.menu_items || [];
+    const items = data.menu_items || [];
+    return items.map((item: any) => ({
+      ...item,
+      status: item.status || "Active"
+    }));
   },
   getMenuItemIngredients: async (): Promise<MenuItemIngredient[]> => {
     const data = readDb();
@@ -297,6 +301,7 @@ export const db = {
   createInventoryItem: async (itemData: Omit<InventoryItem, "id" | "updated_at">): Promise<InventoryItem> => {
     const database = readDb();
     const newItem: InventoryItem = {
+      opening_stock: itemData.opening_stock ?? itemData.quantity,
       ...itemData,
       id: `inv-${Date.now()}`,
       updated_at: new Date().toISOString()

@@ -60,3 +60,15 @@ export async function toggleMenuItemAvailability(id: string, isAvailable: boolea
 export async function removeMenuItem(id: string): Promise<boolean> {
   return db.deleteMenuItem(id);
 }
+
+export async function getRecipeCalculatorData() {
+  try {
+    const items = await db.getMenuItems();
+    const mappings = await db.getMenuItemIngredients();
+    const inventory = await db.getInventory();
+    return { items, mappings, inventory };
+  } catch (error) {
+    console.error("Failed to get recipe calculator data", error);
+    return { items: [], mappings: [], inventory: [] };
+  }
+}

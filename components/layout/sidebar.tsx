@@ -17,21 +17,21 @@ import { toast } from "sonner";
 
 // Complete list of navigation items
 const allNavItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["Owner", "Operations Manager", "Head Chef", "Chef", "Kitchen Assistant", "Packing Staff", "Inventory Manager", "Delivery Driver"] },
+  { name: "Kitchen Overview", href: "/dashboard", icon: LayoutDashboard, roles: ["Owner", "Operations Manager", "Head Chef", "Chef", "Kitchen Assistant", "Packing Staff", "Inventory Manager", "Delivery Driver"] },
   { name: "Orders", href: "/orders", icon: ShoppingBag, roles: ["Owner", "Operations Manager", "Head Chef"] },
   { name: "Kitchen Queue", href: "/kitchen", icon: ChefHat, roles: ["Owner", "Operations Manager", "Head Chef", "Chef", "Kitchen Assistant"] },
   { name: "Packing", href: "/packing", icon: Box, roles: ["Owner", "Operations Manager", "Packing Staff"] },
-  { name: "Menu Manager", href: "/menu", icon: MenuIcon, roles: ["Owner"] },
+  { name: "Menu Manager", href: "/menu", icon: MenuIcon, roles: ["Owner", "Operations Manager", "Head Chef"] },
   { name: "Inventory", href: "/inventory", icon: Package, roles: ["Owner", "Operations Manager", "Inventory Manager"] },
   { name: "Suppliers & POs", href: "/suppliers", icon: Truck, roles: ["Owner", "Operations Manager", "Inventory Manager"] },
-  { name: "Staff Directory", href: "/staff", icon: Users, roles: ["Owner", "Operations Manager"] },
+  { name: "Team Members", href: "/staff", icon: Users, roles: ["Owner", "Operations Manager"] },
   { name: "Attendance", href: "/attendance", icon: CalendarDays, roles: ["Owner", "Operations Manager", "Head Chef"] },
-  { name: "Expenses & Finance", href: "/expenses", icon: Wallet, roles: ["Owner", "Operations Manager"] },
+  { name: "Running Costs", href: "/expenses", icon: Wallet, roles: ["Owner", "Operations Manager"] },
   { name: "Analytics", href: "/analytics", icon: BarChart3, roles: ["Owner"] },
-  { name: "AI Assistant", href: "/ai-assistant", icon: Sparkles, roles: ["Owner"] },
+  { name: "Daily Kitchen Briefing", href: "/ai-assistant", icon: Sparkles, roles: ["Owner"] },
   { name: "Reports", href: "/reports", icon: FileText, roles: ["Owner", "Operations Manager", "Inventory Manager"] },
-  { name: "Supplier Logistics", href: "/supplier-logistics", icon: Package, roles: ["Owner", "Operations Manager", "Inventory Manager"] },
-  { name: "Delivery Desk", href: "/delivery", icon: Truck, roles: ["Owner", "Operations Manager"] },
+  { name: "Supplier Deliveries", href: "/supplier-logistics", icon: Package, roles: ["Owner", "Operations Manager", "Inventory Manager"] },
+  { name: "Delivery Operations", href: "/delivery", icon: Truck, roles: ["Owner", "Operations Manager"] },
   { name: "Settings", href: "/settings", icon: Settings, roles: ["Owner", "Operations Manager", "Head Chef", "Chef", "Kitchen Assistant", "Inventory Manager", "Packing Staff", "Delivery Driver"] },
 ];
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getExpensesList, recordExpense } from "@/actions/expenses";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { ChartCard } from "@/components/shared/chart-card";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -93,9 +94,9 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6 pb-8 relative min-h-[80vh]">
       <PageHeader 
-        title="Expenses & Finance" 
-        description="Monitor operational costs, payroll distributions, and utility expenses."
-        category="Finance"
+        title="Running Costs" 
+        description="Monitor ingredient purchases, staff payroll, rent, utilities, and daily kitchen operational costs."
+        category="Kitchen Expenses"
         actions={
           <button 
             onClick={() => setAddOpen(true)}
@@ -215,111 +216,84 @@ export default function ExpensesPage() {
       </div>
 
       {/* Add Expense Modal */}
-      <AnimatePresence>
-        {addOpen && (
+      <Modal
+        isOpen={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Log Kitchen Expense"
+        maxWidth="sm"
+        footer={
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
+            <button
+              type="button"
               onClick={() => setAddOpen(false)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-sm bg-card border border-border shadow-2xl rounded-2xl z-50 max-h-[90vh] flex flex-col overflow-hidden"
+              className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             >
-              <form onSubmit={handleRecordExpense} className="flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                  <h3 className="text-base font-bold text-foreground">Log Kitchen Expense</h3>
-                  <button 
-                    type="button"
-                    onClick={() => setAddOpen(false)}
-                    className="p-1.5 bg-muted hover:bg-accent text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expense Category</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                    >
-                      {EXPENSE_CATEGORIES.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Amount Spent (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                      placeholder="e.g. 5000"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expense Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={expenseDate}
-                      onChange={(e) => setExpenseDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expense Notes</label>
-                    <input
-                      type="text"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                      placeholder="e.g. Electric bill, Paneer stock"
-                    />
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-end items-center gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                  <button
-                    type="button"
-                    onClick={() => setAddOpen(false)}
-                    className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitLoading}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
-                  >
-                    {submitLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Save expense record"
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="add-expense-form"
+              disabled={submitLoading}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
+            >
+              {submitLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Save expense record"
+              )}
+            </button>
           </>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <form id="add-expense-form" onSubmit={handleRecordExpense} className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expense Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+            >
+              {EXPENSE_CATEGORIES.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Amount Spent (₹)</label>
+            <input
+              type="number"
+              required
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+              placeholder="e.g. 5000"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expense Date</label>
+            <input
+              type="date"
+              required
+              value={expenseDate}
+              onChange={(e) => setExpenseDate(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expense Notes</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+              placeholder="e.g. Electric bill, Paneer stock"
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

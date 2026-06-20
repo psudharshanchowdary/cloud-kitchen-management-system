@@ -12,14 +12,7 @@ import { Box, CheckSquare, Square, Truck, RefreshCw, Check, X, Loader2 } from "l
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { getDeliveryDriversList, dispatchOrderAction } from "@/actions/delivery";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/shared/modal";
 
 export default function PackingPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -257,62 +250,20 @@ export default function PackingPage() {
       )}
 
       {/* Driver Selection Modal */}
-      <Dialog open={assigningOrderId !== null} onOpenChange={(open) => !open && setAssigningOrderId(null)}>
-        <DialogContent className="bg-card border border-border text-foreground rounded-2xl w-[95%] max-w-md p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
-          <DialogHeader className="px-6 py-4 border-b border-border bg-card text-left">
-            <DialogTitle className="text-lg font-bold text-foreground">Select Delivery Driver</DialogTitle>
-            <DialogDescription className="text-muted-foreground text-sm mt-1">
+      <Modal
+        isOpen={assigningOrderId !== null}
+        onClose={() => setAssigningOrderId(null)}
+        title={
+          <div>
+            <h3 className="text-lg font-bold text-foreground">Select Delivery Driver</h3>
+            <p className="text-muted-foreground text-xs font-normal mt-1">
               Choose an available driver to deliver this order.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto p-6">
-            {drivers.length === 0 ? (
-              <div className="text-center py-6 bg-background rounded-xl border border-border">
-                <X className="h-8 w-8 text-rose-500 mx-auto mb-2 opacity-60" />
-                <p className="text-xs text-muted-foreground font-medium">No drivers are currently available.</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Please wait for a driver to return or change status.</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                <label className="text-xs font-bold text-muted-foreground block">AVAILABLE DRIVERS</label>
-                <div className="space-y-2">
-                  {drivers.map((drv) => (
-                    <div
-                      key={drv.id}
-                      onClick={() => setSelectedDriverId(drv.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                        selectedDriverId === drv.id
-                          ? "bg-emerald-500/[0.03] border-emerald-500/30 text-foreground font-semibold"
-                          : "bg-background border-border text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <span className="font-bold text-foreground block text-sm">{drv.full_name}</span>
-                        <div className="flex gap-2 text-[10px] text-muted-foreground font-mono">
-                          <span>ID: {drv.employee_id}</span>
-                          <span>•</span>
-                          <span>{drv.vehicle_type} ({drv.vehicle_number})</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
-                          Available
-                        </span>
-                        <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                          selectedDriverId === drv.id ? "border-emerald-500 bg-emerald-500 text-black" : "border-border"
-                        }`}>
-                          {selectedDriverId === drv.id && <Check className="h-2.5 w-2.5 stroke-[3]" />}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            </p>
           </div>
-
-          <DialogFooter className="px-6 py-4 border-t border-border bg-muted/30 sm:space-x-2">
+        }
+        maxWidth="md"
+        footer={
+          <>
             <button
               onClick={() => setAssigningOrderId(null)}
               disabled={dispatching}
@@ -335,9 +286,53 @@ export default function PackingPage() {
                 </>
               )}
             </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        {drivers.length === 0 ? (
+          <div className="text-center py-6 bg-background rounded-xl border border-border">
+            <X className="h-8 w-8 text-rose-500 mx-auto mb-2 opacity-60" />
+            <p className="text-xs text-muted-foreground font-medium">No drivers are currently available.</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Please wait for a driver to return or change status.</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            <label className="text-xs font-bold text-muted-foreground block">AVAILABLE DRIVERS</label>
+            <div className="space-y-2">
+              {drivers.map((drv) => (
+                <div
+                  key={drv.id}
+                  onClick={() => setSelectedDriverId(drv.id)}
+                  className={`flex items-center justify-between p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                    selectedDriverId === drv.id
+                      ? "bg-emerald-500/[0.03] border-emerald-500/30 text-foreground font-semibold"
+                      : "bg-background border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <span className="font-bold text-foreground block text-sm">{drv.full_name}</span>
+                    <div className="flex gap-2 text-[10px] text-muted-foreground font-mono">
+                      <span>ID: {drv.employee_id}</span>
+                      <span>•</span>
+                      <span>{drv.vehicle_type} ({drv.vehicle_number})</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                      Available
+                    </span>
+                    <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                      selectedDriverId === drv.id ? "border-emerald-500 bg-emerald-500 text-black" : "border-border"
+                    }`}>
+                      {selectedDriverId === drv.id && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

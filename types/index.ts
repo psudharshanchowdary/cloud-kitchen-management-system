@@ -45,6 +45,9 @@ export interface MenuItem {
   preparation_time: number; // in minutes
   image_url?: string;
   created_at: string;
+  status?: "Draft" | "Pending Approval" | "Approved" | "Active";
+  kitchen_station?: string;
+  recipe_cost?: number;
 }
 
 export interface MenuItemIngredient {
@@ -59,6 +62,7 @@ export interface InventoryItem {
   name: string;
   category: string;
   quantity: number;
+  opening_stock?: number;
   unit: string;
   min_level: number; // reorder trigger level
   price_per_unit: number;

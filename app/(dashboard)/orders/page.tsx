@@ -6,6 +6,7 @@ import { getMenuList } from "@/actions/menu";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 import { ORDER_STATUS, ORDER_PRIORITY, PAYMENT_METHOD, ORDER_STATUS_FLOW } from "@/lib/constants";
@@ -40,7 +41,7 @@ export default function OrdersPage() {
       try {
         const [oList, mList] = await Promise.all([getOrdersList(), getMenuList()]);
         setOrders(oList);
-        setMenuItems(mList.filter(m => m.is_available));
+        setMenuItems(mList.filter(m => m.is_available && (m.status === "Active" || !m.status)));
       } catch (err) {
         console.error(err);
       } finally {
@@ -299,336 +300,287 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Slide-over Order Detail Panel */}
-      <AnimatePresence>
+      {/* Order Details Modal */}
+      <Modal
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        title={selectedOrder ? (
+          <div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase font-mono">{selectedOrder.order_number}</span>
+            <h3 className="text-base font-bold text-foreground">Order Details</h3>
+          </div>
+        ) : undefined}
+        maxWidth="md"
+      >
         {selectedOrder && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedOrder(null)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed top-0 right-0 h-screen w-full max-w-md bg-card border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                <div>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase font-mono">{selectedOrder.order_number}</span>
-                  <h3 className="text-base font-bold text-foreground">Order Details</h3>
-                </div>
-                <button 
-                  onClick={() => setSelectedOrder(null)}
-                  className="p-1.5 bg-muted hover:bg-accent text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+          <div className="space-y-6">
+            {/* Status Controls */}
+            <div className="p-4 bg-background border border-border rounded-xl space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">Current Status:</span>
+                <StatusBadge status={selectedOrder.status} />
               </div>
+              
+              {/* Status buttons flow */}
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                {selectedOrder.status !== "Delivered" && selectedOrder.status !== "Cancelled" && (
+                  (() => {
+                    const idx = ORDER_STATUS_FLOW.indexOf(selectedOrder.status);
+                    const next = ORDER_STATUS_FLOW[idx + 1];
+                    if (next) {
+                      return (
+                        <button
+                          onClick={() => handleStatusUpdate(selectedOrder.id, next)}
+                          className="col-span-2 flex items-center justify-center gap-1 py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition-all active:scale-95"
+                        >
+                          Move to {next} <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()
+                )}
+              </div>
+            </div>
 
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Status Controls */}
-                <div className="p-4 bg-background border border-border rounded-xl space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">Current Status:</span>
-                    <StatusBadge status={selectedOrder.status} />
-                  </div>
-                  
-                  {/* Status buttons flow */}
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    {selectedOrder.status !== "Delivered" && selectedOrder.status !== "Cancelled" && (
-                      (() => {
-                        const idx = ORDER_STATUS_FLOW.indexOf(selectedOrder.status);
-                        const next = ORDER_STATUS_FLOW[idx + 1];
-                        if (next) {
-                          return (
-                            <button
-                              onClick={() => handleStatusUpdate(selectedOrder.id, next)}
-                              className="col-span-2 flex items-center justify-center gap-1 py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition-all active:scale-95"
-                            >
-                              Move to {next} <ArrowRight className="h-3.5 w-3.5" />
-                            </button>
-                          );
-                        }
-                        return null;
-                      })()
-                    )}
-                  </div>
+            {/* Customer Details */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer Info</h4>
+              <div className="space-y-2 text-xs text-foreground">
+                <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
+                  <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="font-semibold text-foreground">{selectedOrder.customer_name}</span>
                 </div>
-
-                {/* Customer Details */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer Info</h4>
-                  <div className="space-y-2 text-xs text-foreground">
-                    <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
-                      <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="font-semibold text-foreground">{selectedOrder.customer_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
-                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span>{selectedOrder.customer_phone}</span>
-                    </div>
-                    <div className="flex items-start gap-2.5 p-2.5 bg-background border border-border rounded-xl">
-                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span className="leading-relaxed">{selectedOrder.delivery_address}</span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
+                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span>{selectedOrder.customer_phone}</span>
                 </div>
-
-                {/* Priority Controls */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Order Priority</h4>
-                  <div className="flex items-center gap-2">
-                    {["Low", "Normal", "High"].map((prio) => (
-                      <button
-                        key={prio}
-                        onClick={() => handlePriorityUpdate(selectedOrder.id, prio)}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                          selectedOrder.priority === prio
-                            ? prio === "High"
-                              ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                              : prio === "Low"
-                              ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                              : "bg-muted text-foreground border-border"
-                            : "bg-transparent text-muted-foreground border-border hover:text-foreground"
-                        }`}
-                      >
-                        {prio}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Ordered Items */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ordered Items</h4>
-                  <div className="space-y-2 bg-background border border-border rounded-xl p-3">
-                    {(selectedOrder.items || []).map((item: any) => (
-                      <div key={item.id} className="flex justify-between items-start py-2 border-b border-border last:border-0 last:pb-0">
-                        <div>
-                          <span className="text-xs font-bold text-foreground">{item.menu_item_name}</span>
-                          <span className="text-[10px] text-muted-foreground block">
-                            Qty: {item.quantity} {currentUser?.role !== "Head Chef" && `× ${formatCurrency(item.price)}`}
-                          </span>
-                          {item.special_instructions && (
-                            <span className="text-[10px] text-amber-500 italic block mt-0.5">Note: "{item.special_instructions}"</span>
-                          )}
-                        </div>
-                        {currentUser?.role !== "Head Chef" && (
-                          <span className="text-xs font-bold text-emerald-500">{formatCurrency(item.price * item.quantity)}</span>
-                        )}
-                      </div>
-                    ))}
-                    {currentUser?.role !== "Head Chef" && (
-                      <div className="flex justify-between items-center pt-3 border-t border-border mt-2 text-xs font-bold text-foreground">
-                        <span>Total Amount:</span>
-                        <span className="text-base text-emerald-500">{formatCurrency(selectedOrder.total_amount)}</span>
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-start gap-2.5 p-2.5 bg-background border border-border rounded-xl">
+                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{selectedOrder.delivery_address}</span>
                 </div>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
 
-      {/* Create Order Modal */}
-      <AnimatePresence>
-        {createOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setCreateOpen(false)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg bg-card border border-border shadow-2xl rounded-2xl z-50 max-h-[90vh] flex flex-col overflow-hidden"
-            >
-              <form onSubmit={handleCreateOrder} className="flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                  <h3 className="text-base font-bold text-foreground">Create New Order</h3>
-                  <button 
-                    type="button"
-                    onClick={() => setCreateOpen(false)}
-                    className="p-1.5 bg-muted hover:bg-accent text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors"
+            {/* Priority Controls */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Order Priority</h4>
+              <div className="flex items-center gap-2">
+                {["Low", "Normal", "High"].map((prio) => (
+                  <button
+                    key={prio}
+                    onClick={() => handlePriorityUpdate(selectedOrder.id, prio)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      selectedOrder.priority === prio
+                        ? prio === "High"
+                          ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                          : prio === "Low"
+                          ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                          : "bg-muted text-foreground border-border"
+                        : "bg-transparent text-muted-foreground border-border hover:text-foreground"
+                    }`}
                   >
-                    <X className="h-4 w-4" />
+                    {prio}
                   </button>
-                </div>
+                ))}
+              </div>
+            </div>
 
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  {/* Customer Details */}
-                  <div className="grid grid-cols-2 gap-4">
+            {/* Ordered Items */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ordered Items</h4>
+              <div className="space-y-2 bg-background border border-border rounded-xl p-3">
+                {(selectedOrder.items || []).map((item: any) => (
+                  <div key={item.id} className="flex justify-between items-start py-2 border-b border-border last:border-0 last:pb-0">
                     <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Customer Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={custName}
-                        onChange={(e) => setCustName(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                        placeholder="Enter customer name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Phone Number</label>
-                      <input
-                        type="text"
-                        required
-                        value={custPhone}
-                        onChange={(e) => setCustPhone(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                        placeholder="e.g. 9840123456"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Delivery Address</label>
-                    <textarea
-                      required
-                      value={custAddr}
-                      onChange={(e) => setCustAddr(e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs resize-none"
-                      placeholder="Enter complete delivery address details..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Priority</label>
-                      <select
-                        value={orderPriority}
-                        onChange={(e) => setOrderPriority(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Normal">Normal</option>
-                        <option value="High">High</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Payment Method</label>
-                      <select
-                        value={payMethod}
-                        onChange={(e) => setPayMethod(e.target.value)}
-                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                      >
-                        <option value="UPI">UPI (Prepaid)</option>
-                        <option value="Card">Card (Prepaid)</option>
-                        <option value="Cash">Cash on Delivery</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Items selection */}
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Items Checklist</span>
-                      <button
-                        type="button"
-                        onClick={addItemRow}
-                        className="text-xs text-emerald-500 hover:underline flex items-center gap-0.5"
-                      >
-                        <Plus className="h-3 w-3" /> Add Item
-                      </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {selectedItems.length === 0 ? (
-                        <p className="text-center text-[10px] text-muted-foreground py-6">No items added yet. Click Add Item to start.</p>
-                      ) : (
-                        selectedItems.map((item, index) => {
-                          const menu = menuItems.find(m => m.id === item.menu_item_id);
-                          return (
-                            <div key={index} className="flex gap-2 items-start p-2 bg-background border border-border rounded-xl">
-                              <select
-                                value={item.menu_item_id}
-                                onChange={(e) => updateItemRow(index, "menu_item_id", e.target.value)}
-                                className="flex-1 bg-card border border-border rounded p-1.5 text-xs text-foreground focus:outline-none"
-                              >
-                                {menuItems.map(mi => (
-                                  <option key={mi.id} value={mi.id}>{mi.name} ({formatCurrency(mi.price)})</option>
-                                ))}
-                              </select>
-                              
-                              <input
-                                type="number"
-                                min={1}
-                                value={item.quantity}
-                                onChange={(e) => updateItemRow(index, "quantity", Number(e.target.value))}
-                                className="w-12 bg-card border border-border rounded p-1.5 text-xs text-foreground text-center focus:outline-none"
-                              />
-
-                              <input
-                                type="text"
-                                value={item.special_instructions}
-                                onChange={(e) => updateItemRow(index, "special_instructions", e.target.value)}
-                                className="flex-1 bg-card border border-border rounded p-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
-                                placeholder="Notes (e.g. no onions)"
-                              />
-
-                              <button
-                                type="button"
-                                onClick={() => removeItemRow(index)}
-                                className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded border border-rose-500/20 transition-colors"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          );
-                        })
+                      <span className="text-xs font-bold text-foreground">{item.menu_item_name}</span>
+                      <span className="text-[10px] text-muted-foreground block">
+                        Qty: {item.quantity} {currentUser?.role !== "Head Chef" && `× ${formatCurrency(item.price)}`}
+                      </span>
+                      {item.special_instructions && (
+                        <span className="text-[10px] text-amber-500 italic block mt-0.5">Note: "{item.special_instructions}"</span>
                       )}
                     </div>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4 border-t border-border mt-4 text-xs font-bold text-foreground">
-                    <span>Grand Total:</span>
-                    <span className="text-lg text-emerald-500">{formatCurrency(orderTotal)}</span>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-end items-center gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                  <button
-                    type="button"
-                    onClick={() => setCreateOpen(false)}
-                    className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitLoading}
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
-                  >
-                    {submitLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Confirm & Create Order"
+                    {currentUser?.role !== "Head Chef" && (
+                      <span className="text-xs font-bold text-emerald-500">{formatCurrency(item.price * item.quantity)}</span>
                     )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
+                  </div>
+                ))}
+                {currentUser?.role !== "Head Chef" && (
+                  <div className="flex justify-between items-center pt-3 border-t border-border mt-2 text-xs font-bold text-foreground">
+                    <span>Total Amount:</span>
+                    <span className="text-base text-emerald-500">{formatCurrency(selectedOrder.total_amount)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </Modal>
+
+      {/* Create Order Modal */}
+      <Modal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Create New Order"
+        maxWidth="lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setCreateOpen(false)}
+              className="px-4 py-2 bg-background border border-border rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="create-order-form"
+              disabled={submitLoading}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-muted disabled:text-muted-foreground text-black font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1 active:scale-95"
+            >
+              {submitLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Confirm & Create Order"
+              )}
+            </button>
+          </>
+        }
+      >
+        <form id="create-order-form" onSubmit={handleCreateOrder} className="space-y-4">
+          {/* Customer Details */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Customer Name</label>
+              <input
+                type="text"
+                required
+                value={custName}
+                onChange={(e) => setCustName(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                placeholder="Enter customer name"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Phone Number</label>
+              <input
+                type="text"
+                required
+                value={custPhone}
+                onChange={(e) => setCustPhone(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                placeholder="e.g. 9840123456"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Delivery Address</label>
+            <textarea
+              required
+              value={custAddr}
+              onChange={(e) => setCustAddr(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs resize-none"
+              placeholder="Enter complete delivery address details..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Priority</label>
+              <select
+                value={orderPriority}
+                onChange={(e) => setOrderPriority(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+              >
+                <option value="Low">Low</option>
+                <option value="Normal">Normal</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Payment Method</label>
+              <select
+                value={payMethod}
+                onChange={(e) => setPayMethod(e.target.value)}
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+              >
+                <option value="UPI">UPI (Prepaid)</option>
+                <option value="Card">Card (Prepaid)</option>
+                <option value="Cash">Cash on Delivery</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Items selection */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">Items Checklist</span>
+              <button
+                type="button"
+                onClick={addItemRow}
+                className="text-xs text-emerald-500 hover:underline flex items-center gap-0.5"
+              >
+                <Plus className="h-3 w-3" /> Add Item
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {selectedItems.length === 0 ? (
+                <p className="text-center text-[10px] text-muted-foreground py-6">No items added yet. Click Add Item to start.</p>
+              ) : (
+                selectedItems.map((item, index) => {
+                  const menu = menuItems.find(m => m.id === item.menu_item_id);
+                  return (
+                    <div key={index} className="flex gap-2 items-start p-2 bg-background border border-border rounded-xl">
+                      <select
+                        value={item.menu_item_id}
+                        onChange={(e) => updateItemRow(index, "menu_item_id", e.target.value)}
+                        className="flex-1 bg-card border border-border rounded p-1.5 text-xs text-foreground focus:outline-none"
+                      >
+                        {menuItems.map(mi => (
+                          <option key={mi.id} value={mi.id}>{mi.name} ({formatCurrency(mi.price)})</option>
+                        ))}
+                      </select>
+                      
+                      <input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) => updateItemRow(index, "quantity", Number(e.target.value))}
+                        className="w-12 bg-card border border-border rounded p-1.5 text-xs text-foreground text-center focus:outline-none"
+                      />
+
+                      <input
+                        type="text"
+                        value={item.special_instructions}
+                        onChange={(e) => updateItemRow(index, "special_instructions", e.target.value)}
+                        className="flex-1 bg-card border border-border rounded p-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                        placeholder="Notes (e.g. no onions)"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => removeItemRow(index)}
+                        className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded border border-rose-500/20 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t border-border mt-4 text-xs font-bold text-foreground">
+            <span>Grand Total:</span>
+            <span className="text-lg text-emerald-500">{formatCurrency(orderTotal)}</span>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

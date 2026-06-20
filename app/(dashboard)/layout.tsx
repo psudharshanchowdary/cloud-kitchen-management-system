@@ -15,7 +15,7 @@ const routePermissions: Record<string, string[]> = {
   "/orders": ["Owner", "Operations Manager", "Head Chef"],
   "/kitchen": ["Owner", "Operations Manager", "Head Chef", "Chef", "Kitchen Assistant"],
   "/packing": ["Owner", "Operations Manager", "Packing Staff"],
-  "/menu": ["Owner"],
+  "/menu": ["Owner", "Operations Manager", "Head Chef"],
   "/inventory": ["Owner", "Operations Manager", "Inventory Manager"],
   "/suppliers": ["Owner", "Operations Manager", "Inventory Manager"],
   "/staff": ["Owner", "Operations Manager"],

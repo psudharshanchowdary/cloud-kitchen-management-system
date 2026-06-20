@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getDashboardData } from "@/actions/dashboard";
 import { getAnalyticsData } from "@/actions/analytics";
 import { getDailySummaryReport } from "@/actions/ai-assistant";
+import { getSupplierDeliveriesList } from "@/actions/supplier-logistics";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { CardSkeleton } from "@/components/shared/loading-skeleton";
@@ -12,30 +13,41 @@ import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { 
   TrendingUp, DollarSign, ShoppingBag, Clock, ShieldAlert, 
-  ChefHat, Sparkles, AlertTriangle, UserCheck, Package, FileText, Box, Truck
+  ChefHat, Sparkles, AlertTriangle, UserCheck, Package, FileText, Box, Truck,
+  CheckSquare, Check, HelpCircle
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
 import Link from "next/link";
+
+import { getRecipeCalculatorData } from "@/actions/menu";
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const [data, setData] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [aiReport, setAiReport] = useState<any>(null);
+  const [calculatorData, setCalculatorData] = useState<any>({ items: [], mappings: [], inventory: [] });
+  const [supplierDeliveries, setSupplierDeliveries] = useState<any[]>([]);
+  const [selectedItemForCalc, setSelectedItemForCalc] = useState<string>("");
+  const [simulatedPrice, setSimulatedPrice] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [dashRes, analyticsRes, aiRes] = await Promise.all([
+        const [dashRes, analyticsRes, aiRes, calcRes, supplierDeliveriesRes] = await Promise.all([
           getDashboardData(),
           getAnalyticsData(),
-          getDailySummaryReport()
+          getDailySummaryReport(),
+          getRecipeCalculatorData().catch(() => ({ items: [], mappings: [], inventory: [] })),
+          getSupplierDeliveriesList().catch(() => [])
         ]);
         setData(dashRes);
         setAnalytics(analyticsRes);
         setAiReport(aiRes);
+        setCalculatorData(calcRes);
+        setSupplierDeliveries(supplierDeliveriesRes);
       } catch (err) {
         console.error(err);
       } finally {
@@ -48,7 +60,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Dashboard" description="Loading metrics..." />
+        <PageHeader title="Today's Kitchen Overview" description="Getting live kitchen logs..." />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <CardSkeleton />
           <CardSkeleton />
@@ -65,14 +77,21 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
+  // Calculate greeting based on local time
+  const greetingHour = new Date().getHours();
+  const greeting = greetingHour < 12 ? "Good Morning" : greetingHour < 17 ? "Good Afternoon" : "Good Evening";
+
+  // Calculate active deliveries count
+  const deliveriesInProgress = (data.driverSummaries || []).reduce((sum: number, d: any) => sum + (d.activeCount || 0), 0);
+
   // 1. OPERATIONS MANAGER DASHBOARD
   if (user.role === "Operations Manager") {
     return (
       <div className="space-y-6 pb-8">
         <PageHeader 
-          title="Operations Overview" 
-          description="Operational metrics, delivery, inventory, and staff rosters."
-          category="Manager View"
+          title="Today's Kitchen overview" 
+          description="Operational metrics, delivery operations, inventory reserves, and active team members."
+          category="Manager Desk"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -80,27 +99,25 @@ export default function DashboardPage() {
             title="Today's Revenue" 
             value={formatCurrency(stats.todayRevenue || 0)} 
             icon={DollarSign}
-            trend={{ value: 12.5, isPositive: true }}
-            description="Gross orders today"
+            description="Total cash & UPI sales today"
           />
           <StatCard 
-            title="Monthly Revenue" 
+            title="This Month vs Last Month" 
             value={formatCurrency(stats.monthlyRevenue || 0)} 
             icon={TrendingUp}
-            trend={{ value: 8.4, isPositive: true }}
-            description="Month-to-date sales"
+            description="Month-to-date total sales"
           />
           <StatCard 
             title="Active Orders" 
             value={stats.activeOrdersCount || 0} 
             icon={ShoppingBag}
-            description="Orders in queue or preparing"
+            description="Orders in cooking or packing queue"
           />
           <StatCard 
-            title="Staff on Duty" 
+            title="Staff Working" 
             value={stats.staffOnDutyCount || 0} 
             icon={UserCheck}
-            description="Active clocked-in workers"
+            description="Clocked-in team members right now"
           />
         </div>
 
@@ -108,7 +125,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Revenue Trends */}
             <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-              <h3 className="text-base font-bold text-foreground mb-2">Revenue Trends</h3>
+              <h3 className="text-base font-bold text-foreground mb-2">Today's Revenue Trends</h3>
               <div className="h-64 w-full">
                 {analytics?.revenueTrend ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -137,15 +154,15 @@ export default function DashboardPage() {
 
             {/* Recent Orders */}
             <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-              <h3 className="text-base font-bold text-foreground mb-4">Recent Orders Overview</h3>
+              <h3 className="text-base font-bold text-foreground mb-4">Live Kitchen Queue</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-border text-muted-foreground font-bold">
-                      <th className="pb-3 pr-2">Order ID</th>
+                      <th className="pb-3 pr-2">Order Number</th>
                       <th className="pb-3 px-2">Customer</th>
-                      <th className="pb-3 px-2">Amount</th>
-                      <th className="pb-3 pl-2">Status</th>
+                      <th className="pb-3 px-2">Food Total</th>
+                      <th className="pb-3 pl-2">Progress Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -166,15 +183,15 @@ export default function DashboardPage() {
           <div className="space-y-6">
             {/* Low stock alerts */}
             <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Low Stock alerts</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Stock Running Low</span>
               <div className="space-y-3">
                 {lowStockAlerts.length === 0 ? (
-                  <div className="h-24 flex items-center justify-center text-xs text-muted-foreground">All stocks healthy</div>
+                  <div className="h-24 flex items-center justify-center text-xs text-muted-foreground">All pantry stocks healthy</div>
                 ) : (
                   lowStockAlerts.slice(0, 3).map((item: any) => (
                     <div key={item.name} className="flex justify-between items-center p-3 bg-background border border-border rounded-xl">
                       <span className="text-xs font-bold text-foreground">{item.name}</span>
-                      <span className="text-xs text-rose-500 font-bold">{item.quantity} {item.unit}</span>
+                      <span className="text-xs text-rose-500 font-bold">{item.quantity} {item.unit} remaining</span>
                     </div>
                   ))
                 )}
@@ -183,7 +200,7 @@ export default function DashboardPage() {
 
             {/* Staff on shift */}
             <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Staff on Duty</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Team Members Working</span>
               <div className="space-y-3">
                 {staffOnDuty.slice(0, 3).map((s: any) => (
                   <div key={s.id} className="flex items-center gap-3 p-2 bg-background border border-border rounded-xl">
@@ -196,22 +213,22 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
         {/* Driver Status & Active Deliveries */}
         <div className="bg-card border border-border rounded-2xl p-6 glow-sm mt-6">
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <Truck className="h-5 w-5 text-emerald-500" /> Driver Status & Deliveries
+                <Truck className="h-5 w-5 text-emerald-500" /> Courier Status & Active Trips
               </h3>
               <p className="text-xs text-muted-foreground">Track delivery driver availability, active courier runs, and delays</p>
             </div>
             <Link href="/delivery" className="text-xs text-emerald-500 font-semibold hover:underline">
-              Delivery Dashboard
+              Delivery Operations
             </Link>
           </div>
 
@@ -219,19 +236,19 @@ export default function DashboardPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border text-muted-foreground font-bold bg-card/50">
-                  <th className="p-3">Driver Name</th>
+                  <th className="p-3">Courier Name</th>
                   <th className="p-3">Phone Number</th>
-                  <th className="p-3">Vehicle</th>
-                  <th className="p-3 text-center">Active Trips</th>
-                  <th className="p-3 text-center">Completed Trips</th>
+                  <th className="p-3">Vehicle Details</th>
+                  <th className="p-3 text-center">Active Deliveries</th>
+                  <th className="p-3 text-center">Completed Today</th>
                   <th className="p-3 text-center">Delayed Trips</th>
-                  <th className="p-3 text-right">Status</th>
+                  <th className="p-3 text-right">Duty Status</th>
                 </tr>
               </thead>
               <tbody>
                 {data.driverSummaries?.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-6 text-muted-foreground">No drivers registered</td>
+                    <td colSpan={7} className="text-center py-6 text-muted-foreground">No drivers on shift</td>
                   </tr>
                 ) : (
                   (data.driverSummaries || []).map((driver: any) => (
@@ -274,45 +291,60 @@ export default function DashboardPage() {
 
   // 2. HEAD CHEF DASHBOARD
   if (user.role === "Head Chef") {
+    // Identify waiting orders and preparing orders
+    const ordersWaitingCount = recentOrders.filter((o: any) => o.status === "Pending" || o.status === "Accepted").length;
+    const ordersPreparingCount = recentOrders.filter((o: any) => o.status === "Preparing").length;
+    
+    // Clocked-in chefs and kitchen assistants
+    const activeKitchenCrew = staffOnDuty.filter((s: any) => ["Head Chef", "Chef", "Kitchen Assistant"].includes(s.role));
+
     return (
       <div className="space-y-6 pb-8">
         <PageHeader 
-          title="Kitchen Operations Dashboard" 
+          title="Kitchen Command Center" 
           description="Roster monitoring, queue tracking, and station workload control."
           category="Head Chef Control Room"
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Focus on: waiting, preparing, delayed, available crew, shortages */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <StatCard 
-            title="Orders In Queue" 
-            value={stats.activeOrdersCount || 0} 
+            title="Orders Waiting" 
+            value={ordersWaitingCount} 
+            icon={ShoppingBag}
+            description="Tickets waiting to cook"
+          />
+          <StatCard 
+            title="Preparing Now" 
+            value={ordersPreparingCount} 
             icon={ChefHat}
-            description="Active tickets being prepared"
+            description="Active dishes on burners"
           />
           <StatCard 
-            title="Kitchen Efficiency" 
-            value={`${stats.kitchenEfficiency || 96}%`} 
-            icon={TrendingUp}
-            description="On-time delivery score"
-          />
-          <StatCard 
-            title="Chefs on Shift" 
-            value={staffOnDuty.filter((s: any) => ["Head Chef", "Chef", "Kitchen Assistant"].includes(s.role)).length} 
-            icon={UserCheck}
-            description="Active kitchen crew"
-          />
-          <StatCard 
-            title="Delayed Tickets" 
+            title="Delayed Dishes" 
             value={stats.delayedCount || 0} 
             icon={Clock}
             className={stats.delayedCount > 0 ? "border-rose-500/30 glow-sm" : ""}
-            description="Preparation exceeding 40 mins"
+            description="Exceeded 40 mins prep time"
+          />
+          <StatCard 
+            title="Kitchen Crew Active" 
+            value={activeKitchenCrew.length} 
+            icon={UserCheck}
+            description="Chefs & assistants on shift"
+          />
+          <StatCard 
+            title="Pantry Shortages" 
+            value={lowStockAlerts.length} 
+            icon={AlertTriangle}
+            className={lowStockAlerts.length > 0 ? "border-amber-500/30" : ""}
+            description="Ingredients running low"
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            {/* Active kitchen queue summary */}
+            {/* Live active queue */}
             <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
               <h3 className="text-base font-bold text-foreground mb-4">Kitchen Queue Live Status</h3>
               <div className="space-y-3">
@@ -322,7 +354,12 @@ export default function DashboardPage() {
                   recentOrders.map((o: any) => (
                     <div key={o.id} className="flex justify-between items-center p-3 bg-background border border-border rounded-xl">
                       <div>
-                        <span className="text-xs font-bold text-foreground block">{o.order_number}</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-bold text-foreground">{o.order_number}</span>
+                          <span className="text-[10px] px-2 py-0.5 bg-card border border-border text-muted-foreground rounded-full capitalize">
+                            {o.priority} Priority
+                          </span>
+                        </div>
                         <span className="text-[10px] text-muted-foreground block">
                           {(o.items || []).map((i: any) => `${i.quantity}x ${i.menu_item_name}`).join(", ")}
                         </span>
@@ -333,36 +370,153 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
+
+            {/* Recipe mappings (no financial data) */}
+            <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-foreground">Menu Items & Recipes</h3>
+                <Link href="/menu" className="text-xs font-bold text-emerald-500 hover:underline">
+                  Recipe Builder →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                {(() => {
+                  const drafts = calculatorData.items.filter((m: any) => m.status === "Draft").length;
+                  const pending = calculatorData.items.filter((m: any) => m.status === "Pending Approval").length;
+                  const approved = calculatorData.items.filter((m: any) => m.status === "Approved").length;
+                  const active = calculatorData.items.filter((m: any) => !m.status || m.status === "Active").length;
+                  return (
+                    <>
+                      <div className="p-3 bg-background border border-border rounded-xl text-center">
+                        <span className="block text-[10px] font-bold text-muted-foreground uppercase">Drafts</span>
+                        <span className="text-xl font-extrabold text-foreground">{drafts}</span>
+                      </div>
+                      <div className="p-3 bg-background border border-border rounded-xl text-center">
+                        <span className="block text-[10px] font-bold text-amber-500 uppercase">Pending</span>
+                        <span className="text-xl font-extrabold text-amber-500">{pending}</span>
+                      </div>
+                      <div className="p-3 bg-background border border-border rounded-xl text-center">
+                        <span className="block text-[10px] font-bold text-blue-500 uppercase">Approved</span>
+                        <span className="text-xl font-extrabold text-blue-500">{approved}</span>
+                      </div>
+                      <div className="p-3 bg-background border border-border rounded-xl text-center">
+                        <span className="block text-[10px] font-bold text-emerald-500 uppercase">Active</span>
+                        <span className="text-xl font-extrabold text-emerald-500">{active}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground font-bold">
+                      <th className="pb-3 pr-2">Food Item</th>
+                      <th className="pb-3 px-2">Category</th>
+                      <th className="pb-3 px-2 text-center">Ingredients Linked</th>
+                      <th className="pb-3 pl-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calculatorData.items.slice(0, 5).map((item: any) => {
+                      const linksCount = calculatorData.mappings.filter((m: any) => m.menu_item_id === item.id).length;
+                      return (
+                        <tr key={item.id} className="border-b border-border hover:bg-muted/30 text-foreground">
+                          <td className="py-3 pr-2 font-bold">{item.name}</td>
+                          <td className="py-3 px-2 text-muted-foreground">{item.category}</td>
+                          <td className="py-3 px-2 text-center">
+                            <span className={`px-2 py-0.5 rounded-full font-bold ${
+                              linksCount === 0 
+                                ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" 
+                                : "bg-muted text-foreground border border-border"
+                            }`}>
+                              {linksCount} ingredients
+                            </span>
+                          </td>
+                          <td className="py-3 pl-2">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                              item.status === "Draft" 
+                                ? "bg-muted text-muted-foreground border-border" 
+                                : item.status === "Pending Approval"
+                                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                : item.status === "Approved"
+                                ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                            }`}>
+                              {item.status || "Active"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-6">
-            {/* Staff Attendance summary */}
+            {/* Active chefs roster list */}
             <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Kitchen Crew Attendance</span>
-              <div className="space-y-2">
-                {analytics?.attendanceStats?.filter((s: any) => ["Head Chef", "Chef", "Kitchen Assistant"].includes(s.role)).slice(0, 4).map((s: any) => (
-                  <div key={s.name} className="flex justify-between items-center text-xs">
-                    <span className="text-foreground font-medium">{s.name}</span>
-                    <span className="text-muted-foreground">{s.attendanceRate}% check-in</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Ingredient shortage alerts */}
-            <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Ingredient Shortages</span>
-              <div className="space-y-2">
-                {lowStockAlerts.length === 0 ? (
-                  <span className="text-xs text-muted-foreground">No raw material shortages reported.</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Available Chefs on Shift</span>
+              <div className="space-y-3">
+                {activeKitchenCrew.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">No chefs currently clocked in</p>
                 ) : (
-                  lowStockAlerts.slice(0, 3).map((item: any) => (
-                    <div key={item.name} className="flex justify-between items-center text-xs p-2 bg-background border border-border rounded-lg">
-                      <span className="text-foreground font-bold">{item.name}</span>
-                      <span className="text-rose-500 font-bold">{item.quantity} left</span>
+                  activeKitchenCrew.map((crew: any) => (
+                    <div key={crew.id} className="flex justify-between items-center p-2.5 bg-background border border-border rounded-xl text-xs text-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center font-bold text-[10px] uppercase">
+                          {crew.name.charAt(0)}
+                        </div>
+                        <span className="font-bold">{crew.name}</span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 rounded font-bold capitalize">
+                        {crew.role}
+                      </span>
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+
+            {/* Ingredient Shortages list */}
+            <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Ingredient Shortages</span>
+              <div className="space-y-3">
+                {lowStockAlerts.length === 0 ? (
+                  <div className="h-24 flex flex-col items-center justify-center text-muted-foreground">
+                    <Check className="h-8 w-8 text-emerald-500 mb-2 opacity-50" />
+                    <span className="text-xs">No shortage alerts. All stocks healthy.</span>
+                  </div>
+                ) : (
+                  lowStockAlerts.map((item: any) => (
+                    <div key={item.name} className="flex justify-between items-center p-3 bg-background border border-border rounded-xl text-xs">
+                      <span className="font-bold text-foreground">{item.name}</span>
+                      <span className="text-rose-500 font-bold">{item.quantity} {item.unit} left</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Active station loads */}
+            <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Station Workloads</span>
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between items-center p-2.5 bg-background border border-border rounded-xl">
+                  <span className="text-muted-foreground">Tandoor Station</span>
+                  <span className="text-emerald-500 font-bold">Online</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5 bg-background border border-border rounded-xl">
+                  <span className="text-muted-foreground">Gravy & Curry Station</span>
+                  <span className="text-emerald-500 font-bold">Online</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5 bg-background border border-border rounded-xl">
+                  <span className="text-muted-foreground">Rice & Biryani Dum</span>
+                  <span className="text-emerald-500 font-bold">Online</span>
+                </div>
               </div>
             </div>
           </div>
@@ -373,62 +527,135 @@ export default function DashboardPage() {
 
   // 3. CHEF DASHBOARD
   if (user.role === "Chef") {
+    // Filters order queue specifically for the chef station
+    const activeChefOrders = recentOrders.filter(
+      (o: any) => ["Pending", "Accepted", "Preparing", "Ready"].includes(o.status)
+    );
+    const nextOrder = activeChefOrders.find((o: any) => o.status === "Pending" || o.status === "Accepted");
+    const preparingNow = activeChefOrders.filter((o: any) => o.status === "Preparing");
+    const readyToServe = activeChefOrders.filter((o: any) => o.status === "Ready");
+
     return (
       <div className="space-y-6 pb-8">
         <PageHeader 
-          title="Chef Preparation Station" 
-          description="Prepare assigned dishes, update order statuses, and monitor performance."
-          category="Chef Workspace"
+          title="My Cooking Station" 
+          description="Prepare assigned dishes, update order statuses, and monitor your station roster."
+          category="Chef Station"
         />
 
+        {/* Operational Task Board Grid (No analytics cards or metrics) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard 
-            title="My Assigned Orders" 
-            value={stats.activeOrdersCount ? Math.ceil(stats.activeOrdersCount / 2) : 0} 
-            icon={ChefHat}
-            description="Tickets assigned to my station"
-          />
-          <StatCard 
-            title="Avg Preparation Speed" 
-            value="14 mins" 
-            icon={Clock}
-            description="Preparation latency per order"
-          />
-          <StatCard 
-            title="Orders Prepared Today" 
-            value={stats.completedOrders ? Math.ceil(stats.completedOrders / 2) : 4} 
-            icon={TrendingUp}
-            description="Total completed tickets"
-          />
-        </div>
-
-        <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-          <h3 className="text-base font-bold text-foreground mb-4">Assigned Cooking Queue</h3>
-          <div className="space-y-3">
-            {recentOrders.length === 0 ? (
-              <p className="text-center text-xs text-muted-foreground py-8">No assigned orders</p>
-            ) : (
-              recentOrders.slice(0, 3).map((o: any) => (
-                <div key={o.id} className="flex justify-between items-center p-4 bg-background border border-border rounded-xl">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-foreground">{o.order_number}</span>
-                      <span className="text-[10px] px-2 py-0.5 bg-card border border-border text-muted-foreground rounded-full capitalize">
-                        {o.priority} Priority
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {(o.items || []).map((i: any) => `${i.quantity}x ${i.menu_item_name}`).join(", ")}
-                    </p>
+          {/* Column 1: Next Order / Waiting Queue */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col min-h-[400px]">
+            <div className="border-b border-border pb-3 mb-4 flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Up Next in Queue</span>
+              <span className="text-xs px-2 py-0.5 bg-muted border border-border text-muted-foreground rounded-full font-bold">
+                {activeChefOrders.filter((o: any) => o.status === "Pending" || o.status === "Accepted").length} tickets
+              </span>
+            </div>
+            
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[450px] pr-1">
+              {nextOrder ? (
+                <div key={nextOrder.id} className="p-4 bg-background border border-border rounded-xl space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-black text-foreground">{nextOrder.order_number}</span>
+                    <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded text-[9px] font-extrabold capitalize">
+                      {nextOrder.priority} Priority
+                    </span>
                   </div>
-                  <div className="flex gap-2">
-                    <Link href="/kitchen" className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[10px] rounded-lg shadow-md transition-all">
-                      Update Status
+                  <div className="text-xs space-y-1">
+                    {(nextOrder.items || []).map((i: any) => (
+                      <div key={i.menu_item_name} className="flex justify-between text-foreground">
+                        <span className="font-semibold">{i.menu_item_name}</span>
+                        <span className="text-muted-foreground">Qty: {i.quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-border/50 flex justify-end">
+                    <Link href="/kitchen" className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[10px] rounded-lg shadow-md transition-all active:scale-95">
+                      Accept & Start Cooking
                     </Link>
                   </div>
                 </div>
-              ))
-            )}
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                  <CheckSquare className="h-8 w-8 mb-2 opacity-30 text-emerald-500" />
+                  <span className="text-xs font-medium">No pending tickets in queue</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Preparing Now */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col min-h-[400px]">
+            <div className="border-b border-border pb-3 mb-4 flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Preparing Now</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-bold">
+                {preparingNow.length} active
+              </span>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[450px] pr-1">
+              {preparingNow.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                  <ChefHat className="h-8 w-8 mb-2 opacity-30" />
+                  <span className="text-xs font-medium">Station is idle. Grab a ticket from queue.</span>
+                </div>
+              ) : (
+                preparingNow.map((o: any) => (
+                  <div key={o.id} className="p-4 bg-background border border-border rounded-xl space-y-3 border-l-2 border-l-amber-500">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-foreground">{o.order_number}</span>
+                      <span className="text-[10px] text-amber-500 font-bold animate-pulse">Cooking...</span>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      {(o.items || []).map((i: any) => (
+                        <div key={i.menu_item_name} className="flex justify-between text-foreground">
+                          <span className="font-semibold">{i.menu_item_name}</span>
+                          <span className="text-muted-foreground">Qty: {i.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-border/50 flex justify-end">
+                      <Link href="/kitchen" className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[10px] rounded-lg shadow-md transition-all active:scale-95">
+                        Mark Ready to Serve
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Column 3: Ready To Serve */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col min-h-[400px]">
+            <div className="border-b border-border pb-3 mb-4 flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Ready to Pack</span>
+              <span className="text-xs px-2 py-0.5 bg-muted border border-border text-muted-foreground rounded-full font-bold">
+                {readyToServe.length} completed
+              </span>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[450px] pr-1">
+              {readyToServe.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                  <Box className="h-8 w-8 mb-2 opacity-30 text-emerald-500" />
+                  <span className="text-xs font-medium">No dishes waiting to be packed</span>
+                </div>
+              ) : (
+                readyToServe.map((o: any) => (
+                  <div key={o.id} className="p-4 bg-background border border-border rounded-xl space-y-2 opacity-70">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-foreground">{o.order_number}</span>
+                      <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded font-bold">Ready</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {(o.items || []).map((i: any) => `${i.quantity}x ${i.menu_item_name}`).join(", ")}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -440,7 +667,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6 pb-8">
         <PageHeader 
-          title="Kitchen Assistant Helper" 
+          title="Kitchen Assistant Workspace" 
           description="Track raw ingredient preps, thawing requests, and cleaning tasks."
           category="Assistant Workspace"
         />
@@ -459,7 +686,7 @@ export default function DashboardPage() {
             description="Completed roster duties"
           />
           <StatCard 
-            title="Urgent Material Requests" 
+            title="Shortages Reported" 
             value={lowStockAlerts.length} 
             icon={AlertTriangle}
             description="Raw items below safety margins"
@@ -512,53 +739,131 @@ export default function DashboardPage() {
 
   // 5. PACKING STAFF DASHBOARD
   if (user.role === "Packing Staff") {
+    // Filter orders ready to pack (Ready status) and waiting for courier pickup (Packed status)
+    const readyToPackOrders = recentOrders.filter((o: any) => o.status === "Ready");
+    const packedWaitingOrders = recentOrders.filter((o: any) => o.status === "Packed");
+
     return (
       <div className="space-y-6 pb-8">
         <PageHeader 
-          title="Packing & Dispatch Desk" 
-          description="Verify order contents, print packing slips, and dispatch to delivery drivers."
-          category="Packing Workspace"
+          title="Order Packing & Courier Dispatch" 
+          description="Verify order items, seal bags, print packing slips, and dispatch to courier drivers."
+          category="Packing Desk"
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard 
-            title="Tickets to Pack" 
-            value={stats.activeOrdersCount ? Math.max(1, Math.floor(stats.activeOrdersCount / 3)) : 0} 
-            icon={Box}
-            description="Orders with READY food status"
-          />
-          <StatCard 
-            title="Orders Packed Today" 
-            value="25 Orders" 
-            icon={TrendingUp}
-            description="Successfully sealed and dispatched"
-          />
-          <StatCard 
-            title="Delivery Dispatches Active" 
-            value="8 Shipments" 
-            icon={Truck}
-            description="Out for delivery right now"
-          />
-        </div>
+        {/* Packing & Dispatch board */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Column 1: Ready to Pack */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col min-h-[400px]">
+            <div className="border-b border-border pb-3 mb-4 flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Ready to Pack</span>
+              <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-500 rounded-full font-bold">
+                {readyToPackOrders.length} orders
+              </span>
+            </div>
 
-        <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-          <h3 className="text-base font-bold text-foreground mb-4">Pending Packing queue</h3>
-          <div className="space-y-3">
-            {recentOrders.length === 0 ? (
-              <p className="text-center text-xs text-muted-foreground py-8">No orders to pack</p>
-            ) : (
-              recentOrders.slice(0, 3).map((o: any) => (
-                <div key={o.id} className="flex justify-between items-center p-4 bg-background border border-border rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-foreground block">{o.order_number}</span>
-                    <span className="text-[10px] text-muted-foreground block">{o.customer_name}</span>
-                  </div>
-                  <Link href="/packing" className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[10px] rounded-lg shadow-md transition-all">
-                    Open Packing Sheet
-                  </Link>
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[450px] pr-1">
+              {readyToPackOrders.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                  <ChefHat className="h-8 w-8 mb-2 opacity-30 text-emerald-500" />
+                  <span className="text-xs">Waiting for chefs to mark items ready</span>
                 </div>
-              ))
-            )}
+              ) : (
+                readyToPackOrders.map((o: any) => (
+                  <div key={o.id} className="p-4 bg-background border border-border rounded-xl space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-foreground">{o.order_number}</span>
+                      <span className="text-[9px] text-muted-foreground font-mono">{formatTime(o.order_date)}</span>
+                    </div>
+                    <p className="text-xs text-foreground font-bold">
+                      {(o.items || []).map((i: any) => `${i.quantity}x ${i.menu_item_name}`).join(", ")}
+                    </p>
+                    <div className="pt-2 flex justify-end">
+                      <Link href="/packing" className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[10px] rounded-lg shadow-md transition-all active:scale-95">
+                        Start Packing
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Packed & Waiting for Driver Pickup */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col min-h-[400px]">
+            <div className="border-b border-border pb-3 mb-4 flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Waiting for Pickup</span>
+              <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-full font-bold">
+                {packedWaitingOrders.length} orders
+              </span>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[450px] pr-1">
+              {packedWaitingOrders.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center py-12 text-muted-foreground">
+                  <Box className="h-8 w-8 mb-2 opacity-30" />
+                  <span className="text-xs">No sealed orders waiting for drivers</span>
+                </div>
+              ) : (
+                packedWaitingOrders.map((o: any) => (
+                  <div key={o.id} className="p-4 bg-background border border-border rounded-xl space-y-2 opacity-80 border-l-2 border-l-emerald-500">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-foreground">{o.order_number}</span>
+                      <span className="text-[10px] text-emerald-500 font-bold">Sealed & Packed</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      Customer: {o.customer_name}
+                    </p>
+                    <div className="pt-2 flex justify-end">
+                      <Link href="/packing" className="px-3.5 py-1.5 bg-muted hover:bg-accent border border-border text-foreground font-semibold text-[10px] rounded-lg shadow-md transition-all">
+                        Courier Handover
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Column 3: Dispatch & Courier Availability */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col min-h-[400px]">
+            <div className="border-b border-border pb-3 mb-4">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Driver Arrivals</span>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[450px] pr-1">
+              {(data.driverSummaries || []).map((driver: any) => (
+                <div key={driver.id} className="p-3 bg-background border border-border rounded-xl flex justify-between items-center text-xs">
+                  <div>
+                    <span className="font-bold text-foreground block">{driver.name}</span>
+                    <span className="text-[9px] text-muted-foreground block font-mono">{driver.vehicle_number} ({driver.vehicle_type})</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                    driver.status === 'Available' 
+                      ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20' 
+                      : driver.status === 'On Delivery' 
+                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      : 'bg-muted text-muted-foreground border border-border'
+                  }`}>
+                    {driver.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Packing Checklist */}
+            <div className="mt-4 pt-4 border-t border-border space-y-2 text-xs">
+              <span className="font-bold text-foreground block uppercase text-[10px] text-muted-foreground">Packing Checklist</span>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CheckSquare className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Verify double portions of Naan/Naan baskets</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CheckSquare className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Include Biryani raita & salan cups</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -567,71 +872,133 @@ export default function DashboardPage() {
 
   // 6. INVENTORY MANAGER DASHBOARD
   if (user.role === "Inventory Manager") {
+    // Active POs
+    const activePO = calculatorData.items?.length > 0 ? "1 Pending PO" : "No pending POs";
+
     return (
       <div className="space-y-6 pb-8">
         <PageHeader 
-          title="Inventory Dashboard" 
-          description="Safety stock monitoring, supplier directory, and purchase order tracking."
-          category="Inventory Workspace"
+          title="Pantry & Supplier Operations" 
+          description="Incoming deliveries, supplier trucks, safety stock logs, and active purchase orders."
+          category="Warehouse Desk"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <StatCard 
             title="Total Stock Items" 
-            value="7 Raw Materials" 
+            value={`${calculatorData.inventory?.length || 7} Ingredients`} 
             icon={Package}
-            description="Items inside the dry/cold pantry"
+            description="Items inside dry/cold pantry"
           />
           <StatCard 
-            title="Low Stock Warnings" 
+            title="Low Stock Warning" 
             value={lowStockAlerts.length} 
             icon={AlertTriangle}
             className={lowStockAlerts.length > 0 ? "border-rose-500/30 glow-sm" : ""}
-            description="Materials below reorder limits"
+            description="Ingredients below safety limits"
           />
           <StatCard 
-            title="Suppliers Registered" 
+            title="Registered Suppliers" 
             value="2 Suppliers" 
             icon={Truck}
-            description="Active raw food vendors"
+            description="Active raw ingredient vendors"
           />
           <StatCard 
-            title="Pending Purchase Orders" 
-            value="1 Pending PO" 
+            title="Purchase Orders Active" 
+            value={activePO} 
             icon={FileText}
-            description="Awaiting delivery verification"
+            description="POs currently outstanding"
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Low stock list */}
-          <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
-            <h3 className="text-base font-bold text-foreground mb-4">Stock level alerts</h3>
+          {/* Incoming Supplier Trucks & Drivers */}
+          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 glow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-bold text-foreground">Incoming Supplier Deliveries</h3>
+              <Link href="/supplier-logistics" className="text-xs font-semibold text-emerald-500 hover:underline">
+                Supplier Deliveries Log
+              </Link>
+            </div>
+            
             <div className="space-y-3">
-              {lowStockAlerts.length === 0 ? (
-                <p className="text-center text-xs text-muted-foreground py-8">All ingredient stock levels healthy</p>
+              {supplierDeliveries.length === 0 ? (
+                <p className="text-center text-xs text-muted-foreground py-8">No incoming supplier trucks scheduled today</p>
               ) : (
-                lowStockAlerts.map((item: any) => (
-                  <div key={item.name} className="flex justify-between items-center p-3 bg-background border border-border rounded-xl">
-                    <span className="text-xs font-bold text-foreground">{item.name}</span>
-                    <span className="text-xs text-rose-500 font-bold">{item.quantity} {item.unit} remaining</span>
+                supplierDeliveries.slice(0, 3).map((d: any) => (
+                  <div key={d.id} className="p-4 bg-background border border-border rounded-xl flex justify-between items-center text-xs text-foreground">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold">{d.supplier_name}</span>
+                        <span className="px-2 py-0.5 bg-card border border-border text-muted-foreground rounded font-mono text-[9px]">
+                          {d.truck_number}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Driver: {d.driver_name} ({d.driver_phone}) | Source: {d.source_warehouse || "Koyambedu Warehouse"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        d.status === 'Delivered' 
+                          ? 'bg-emerald-500/10 text-emerald-400' 
+                          : d.status === 'Delayed'
+                          ? 'bg-rose-500/10 text-rose-500'
+                          : 'bg-amber-500/10 text-amber-500'
+                      }`}>
+                        {d.status}
+                      </span>
+                      {d.arrival_time && <span className="block text-[9px] text-muted-foreground mt-1">Arrived {formatTime(d.arrival_time)}</span>}
+                    </div>
                   </div>
                 ))
               )}
             </div>
+
+            {/* Goods Received Log */}
+            <div className="border-t border-border pt-4">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider block mb-3">Goods Checked-In This Week</span>
+              <div className="space-y-2 max-h-48 overflow-y-auto text-xs text-muted-foreground pr-1">
+                {supplierDeliveries.filter(d => d.status === "Delivered").slice(0, 3).map((d: any) => 
+                  (d.products || []).map((p: any) => (
+                    <div key={p.batch_number} className="flex justify-between items-center p-2 bg-background border border-border rounded-lg">
+                      <span className="font-semibold text-foreground">{p.ingredient_name}</span>
+                      <span>{p.quantity_received} {p.unit} checked in (Batch: {p.batch_number})</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Quick procurement link */}
-          <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-bold text-foreground mb-4">Quick Procurement Tools</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-                Instantly generate Purchase Orders for low-stock items from Fresh Foods & Dairy Co. or Metro Cash & Carry.
-              </p>
+          <div className="space-y-6">
+            {/* Low stock alerts */}
+            <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-4">Stock Running Low</span>
+              <div className="space-y-3">
+                {lowStockAlerts.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-8">All ingredient stock levels healthy</p>
+                ) : (
+                  lowStockAlerts.map((item: any) => (
+                    <div key={item.name} className="flex justify-between items-center p-3 bg-background border border-border rounded-xl text-xs">
+                      <span className="font-bold text-foreground">{item.name}</span>
+                      <span className="text-rose-500 font-bold">{item.quantity} {item.unit} remaining</span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <div className="flex gap-3 justify-end">
-              <Link href="/suppliers" className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs rounded-xl shadow-lg transition-all">
-                Create Purchase Order
+
+            {/* Quick PO actions */}
+            <div className="bg-card border border-border rounded-2xl p-6 glow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">Pantry Replenishment</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                  Send purchase orders to bulk food distributors to refill safety ingredients stock levels.
+                </p>
+              </div>
+              <Link href="/suppliers" className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-center text-xs rounded-xl shadow-lg transition-all active:scale-95 block">
+                Write Purchase Order
               </Link>
             </div>
           </div>
@@ -702,72 +1069,127 @@ export default function DashboardPage() {
     );
   }
 
-  // DEFAULT / OWNER (EXECUTIVE) DASHBOARD
+  // DEFAULT / OWNER (TODAY'S KITCHEN OVERVIEW)
   return (
     <div className="space-y-6 pb-8">
       <PageHeader 
-        title="Executive Dashboard" 
-        description="Complete operational control and financial health metrics."
-        category="Admin overview"
+        title={`${greeting}, Queen Rajkumari`} 
+        description="Here is what is happening in the kitchen right now."
+        category="Today's Kitchen Overview"
         actions={
           <Link 
             href="/ai-assistant" 
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs rounded-xl shadow-lg shadow-emerald-500/10 transition-all active:scale-95"
           >
-            <Sparkles className="h-4 w-4" /> Ask AI Assistant
+            <Sparkles className="h-4 w-4" /> Open Daily Kitchen Briefing
           </Link>
         }
       />
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Today's Snapshot Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
         <StatCard 
-          title="Total Revenue" 
-          value={formatCurrency(stats.totalRevenue || 0)} 
+          title="Orders Completed" 
+          value={stats.completedOrders || 0} 
+          icon={CheckSquare}
+          description="Successfully served today"
+        />
+        <StatCard 
+          title="Orders In Progress" 
+          value={stats.activeOrdersCount || 0} 
+          icon={ChefHat}
+          description="Tickets currently cooking"
+        />
+        <StatCard 
+          title="Revenue Today" 
+          value={formatCurrency(stats.todayRevenue || 0)} 
           icon={DollarSign}
-          trend={{ value: 12.5, isPositive: true }}
-          description="Cumulative gross sales"
+          description="Total cash & UPI sales today"
         />
         <StatCard 
-          title="Total Expenses" 
-          value={formatCurrency(stats.totalExpenses || 0)} 
-          icon={TrendingUp}
-          trend={{ value: 5.2, isPositive: false }}
-          description="Total payroll & operational outflow"
+          title="Deliveries In Progress" 
+          value={deliveriesInProgress} 
+          icon={Truck}
+          description="Orders out on the road"
         />
         <StatCard 
-          title="Net Profit" 
-          value={formatCurrency(stats.profit || 0)} 
-          icon={DollarSign}
-          trend={{ value: 18.4, isPositive: true }}
-          className={stats.profit > 0 ? "border-emerald-500/30 glow-sm" : ""}
-          description="Net profit margins"
-        />
-        <StatCard 
-          title="Business Growth" 
-          value={`${stats.businessGrowth || 0}%`} 
-          icon={TrendingUp}
-          trend={{ value: stats.businessGrowth || 0, isPositive: (stats.businessGrowth || 0) >= 0 }}
-          description="Month-over-month growth rate"
-        />
-        <StatCard 
-          title="Employee Salary Expenses" 
-          value={formatCurrency(stats.employeeSalaries || 0)} 
+          title="Staff Working" 
+          value={stats.staffOnDutyCount || 0} 
           icon={UserCheck}
-          description="Salaries paid to active employees"
+          description="Clocked-in team members"
         />
         <StatCard 
-          title="Operational Costs" 
-          value={formatCurrency(stats.operationalCosts || 0)} 
-          icon={Clock}
-          description="Rent, utilities, marketing & ingredients"
+          title="Low Stock Items" 
+          value={lowStockAlerts.length} 
+          icon={AlertTriangle}
+          className={lowStockAlerts.length > 0 ? "border-amber-500/30" : ""}
+          description="Ingredients running low"
         />
       </div>
 
-      {/* Replaces the Removed technical section with business intelligence content */}
+      {/* Dedicated Q&A Box answering "What does this user need to do right now?" */}
+      <div className="bg-card border border-border rounded-2xl p-6 glow-sm">
+        <h3 className="text-base font-bold text-foreground mb-4">Today's Kitchen Status</h3>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 text-xs">
+          <div className="p-4 bg-background border border-border rounded-xl space-y-2">
+            <span className="font-bold text-emerald-500 block uppercase tracking-wider text-[10px]">What is happening?</span>
+            <p className="text-muted-foreground leading-relaxed">
+              We completed **{stats.completedOrders} orders** today. Currently, **{stats.activeOrdersCount} orders** are being prepared on the line. We have **{stats.staffOnDutyCount} team members** working.
+            </p>
+          </div>
+          <div className="p-4 bg-background border border-border rounded-xl space-y-2">
+            <span className="font-bold text-amber-500 block uppercase tracking-wider text-[10px]">What needs attention?</span>
+            <p className="text-muted-foreground leading-relaxed">
+              {stats.delayedCount > 0 || lowStockAlerts.length > 0 ? (
+                <>
+                  We have {stats.delayedCount > 0 && <span>**{stats.delayedCount} delayed dishes** in queue. </span>}
+                  {lowStockAlerts.length > 0 && <span>**{lowStockAlerts.length} ingredients** are below safety level thresholds.</span>}
+                </>
+              ) : (
+                "The kitchen is running completely on time with full pantry levels today."
+              )}
+            </p>
+          </div>
+          <div className="p-4 bg-background border border-border rounded-xl space-y-2">
+            <span className="font-bold text-amber-500 block uppercase tracking-wider text-[10px]">Is anything delayed?</span>
+            <p className="text-muted-foreground leading-relaxed">
+              {stats.delayedCount > 0 ? (
+                <span>⚠️ Yes, **{stats.delayedCount} orders** have exceeded the 40-minute prep limit. Check Curry/Tandoor stations.</span>
+              ) : (
+                "✅ No delays today. All stations are cooking and serving tickets on schedule."
+              )}
+            </p>
+          </div>
+          <div className="p-4 bg-background border border-border rounded-xl space-y-2">
+            <span className="font-bold text-amber-500 block uppercase tracking-wider text-[10px]">Is inventory low?</span>
+            <p className="text-muted-foreground leading-relaxed">
+              {lowStockAlerts.length > 0 ? (
+                <span>⚠️ Yes, low stock detected: **{lowStockAlerts.map((i: any) => i.name).slice(0, 3).join(", ")}**. Replenish inventory.</span>
+              ) : (
+                "✅ Pantry looks great. All ingredient reserves are within healthy thresholds."
+              )}
+            </p>
+          </div>
+          <div className="p-4 bg-background border border-border rounded-xl space-y-2">
+            <span className="font-bold text-emerald-500 block uppercase tracking-wider text-[10px]">Are deliveries on time?</span>
+            <p className="text-muted-foreground leading-relaxed">
+              {(() => {
+                const delayedTrips = (data.driverSummaries || []).reduce((sum: number, d: any) => sum + (d.delayedCount || 0), 0);
+                return delayedTrips > 0 ? (
+                  <span>⚠️ No, we have **{delayedTrips} delayed trips** en route. Deliveries operations require review.</span>
+                ) : (
+                  "✅ Yes, all active delivery couriers are tracking on time with zero late notifications."
+                );
+              })()}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main briefing and alert logs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Card 1: AI Inventory Summary */}
+        {/* Card 1: Daily Kitchen Briefing */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -775,7 +1197,7 @@ export default function DashboardPage() {
         >
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI Operations Digest</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Daily Kitchen Briefing</span>
               <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-full font-bold">Live AI</span>
             </div>
             
@@ -783,26 +1205,34 @@ export default function DashboardPage() {
               <div className="p-3.5 bg-background border border-border rounded-xl">
                 <span className="text-[10px] text-muted-foreground font-bold block mb-1">TODAY'S SUMMARY</span>
                 <p className="text-xs text-foreground leading-relaxed">
-                  We completed <strong className="text-emerald-500">{stats.completedOrders} orders</strong> today. 
-                  Top performing item was <strong className="text-foreground">{aiReport?.topItem || "Chicken Biryani"}</strong>. 
-                  Kitchen operates with <strong className="text-emerald-500">{stats.kitchenEfficiency}% efficiency</strong>.
+                  {aiReport?.todaySummaryText || (
+                    <>
+                      We completed <strong className="text-emerald-500">{stats.completedOrders} orders</strong> today. 
+                      Top performing item was <strong className="text-foreground">{aiReport?.topItem || "Chicken Biryani"}</strong>. 
+                      Kitchen performance is operating smoothly.
+                    </>
+                  )}
                 </p>
               </div>
 
               <div className="p-3.5 bg-background border border-border rounded-xl">
                 <span className="text-[10px] text-muted-foreground font-bold block mb-1">PURCHASING ACTION</span>
                 <p className="text-xs text-foreground leading-relaxed">
-                  {aiReport?.recommendedPurchase ? (
-                    <span>Procurement recommended: <strong className="text-amber-500">{aiReport.recommendedPurchase}</strong>.</span>
-                  ) : (
-                    <span>All item stocks are within safe margins. No purchasing action needed.</span>
+                  {aiReport?.purchasingActionText || (
+                    <>
+                      {aiReport?.recommendedPurchase ? (
+                        <span>Procurement recommended: <strong className="text-amber-500">{aiReport.recommendedPurchase}</strong>.</span>
+                      ) : (
+                        <span>All item stocks are within safe margins. No purchasing action needed.</span>
+                      )}
+                    </>
                   )}
                 </p>
               </div>
             </div>
           </div>
           <Link href="/ai-assistant" className="text-xs text-emerald-500 hover:text-emerald-400 font-semibold flex items-center justify-end gap-1 mt-6">
-            View full AI insights <ArrowRightIcon className="h-3 w-3" />
+            View full briefing page <ArrowRightIcon className="h-3 w-3" />
           </Link>
         </motion.div>
 
@@ -922,7 +1352,7 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">Currently clocked-in team members</p>
             </div>
             <Link href="/staff" className="text-xs text-emerald-500 font-semibold hover:underline">
-              Manage Staff
+              Team Members
             </Link>
           </div>
 
@@ -1011,7 +1441,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Track recently completed courier delivery runs</p>
           </div>
           <Link href="/delivery" className="text-xs text-emerald-500 font-semibold hover:underline">
-            View Delivery Desk
+            View Delivery Operations
           </Link>
         </div>
 
@@ -1029,7 +1459,7 @@ export default function DashboardPage() {
                 <div key={delivery.id} className="bg-background border border-border rounded-xl p-5 space-y-3 relative overflow-hidden">
                   <div className="flex justify-between items-center pb-2.5 border-b border-border">
                     <span className="text-xs font-black text-foreground">Order #{formattedOrderNum}</span>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-450 border border-emerald-500/20">
                       {delivery.status}
                     </span>
                   </div>

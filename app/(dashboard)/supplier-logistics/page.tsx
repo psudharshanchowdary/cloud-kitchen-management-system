@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { getSupplierLogisticsDashboardData, acceptSupplierDeliveryAction, rejectSupplierDeliveryAction, reportDeliveryIssueAction } from "@/actions/supplier-logistics";
 import { PageHeader } from "@/components/shared/page-header";
+import { Modal } from "@/components/shared/modal";
 import { StatCard } from "@/components/shared/stat-card";
 import { CardSkeleton } from "@/components/shared/loading-skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -133,7 +134,7 @@ export default function SupplierLogisticsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Supplier Logistics" description="Loading logistics data..." />
+        <PageHeader title="Supplier Deliveries" description="Loading deliveries data..." />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
           {Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
@@ -148,7 +149,7 @@ export default function SupplierLogisticsPage() {
   return (
     <div className="space-y-6 pb-8">
       <PageHeader
-        title="Supplier Logistics & Deliveries"
+        title="Supplier Deliveries"
         description="Track incoming stock deliveries, supplier performance, truck dispatch records, and inventory replenishment."
         category={isInventoryManager ? "Inventory Receiving" : isOwner ? "Executive Logistics View" : "Operations Logistics"}
         actions={
@@ -405,176 +406,137 @@ export default function SupplierLogisticsPage() {
       </div>
 
       {/* Accept Modal */}
-      <AnimatePresence>
-        {acceptingId && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                <div>
-                  <h3 className="text-base font-bold text-foreground">Accept Delivery</h3>
-                  <p className="text-xs text-muted-foreground">Confirm received quantities and condition for each product</p>
-                </div>
-                <button onClick={() => setAcceptingId(null)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-3">
-                {acceptProducts.map((p: any, idx: number) => (
-                  <div key={p.ingredient_id} className="bg-background border border-border rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="font-bold text-foreground text-sm">{p.ingredient_name}</span>
-                        <span className="text-xs text-muted-foreground block">Ordered: {p.quantity_ordered} {p.unit}</span>
-                      </div>
-                      <select
-                        value={p.status}
-                        onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], status: e.target.value }; setAcceptProducts(updated); }}
-                        className="text-xs bg-card border border-border text-foreground rounded-lg px-2 py-1 focus:outline-none"
-                      >
-                        <option value="Good">Good</option>
-                        <option value="Damaged">Damaged</option>
-                        <option value="Missing">Missing</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase block mb-1">Qty Received ({p.unit})</label>
-                        <input
-                          type="number"
-                          value={p.quantity_received}
-                          onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], quantity_received: Number(e.target.value) }; setAcceptProducts(updated); }}
-                          className="w-full bg-card border border-border text-foreground text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase block mb-1">Batch Number</label>
-                        <input
-                          type="text"
-                          value={p.batch_number || ""}
-                          onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], batch_number: e.target.value }; setAcceptProducts(updated); }}
-                          placeholder="BTH-XXXX"
-                          className="w-full bg-card border border-border text-foreground text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="text-[10px] text-muted-foreground font-bold uppercase block mb-1">Expiry Date</label>
-                        <input
-                          type="date"
-                          value={p.expiry_date || ""}
-                          onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], expiry_date: e.target.value }; setAcceptProducts(updated); }}
-                          className="w-full bg-card border border-border text-foreground text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Footer */}
-              <div className="flex gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                <button onClick={() => setAcceptingId(null)} disabled={submitting} className="flex-1 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold transition-all">
-                  Cancel
-                </button>
-                <button onClick={handleAccept} disabled={submitting} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-60">
-                  {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Processing...</> : <><Check className="h-3.5 w-3.5" /> Accept & Update Stock</>}
-                </button>
-              </div>
-            </motion.div>
+      <Modal
+        isOpen={!!acceptingId}
+        onClose={() => setAcceptingId(null)}
+        title={
+          <div>
+            <h3 className="text-base font-bold text-foreground">Accept Delivery</h3>
+            <p className="text-xs text-muted-foreground">Confirm received quantities and condition for each product</p>
           </div>
-        )}
-      </AnimatePresence>
+        }
+        maxWidth="lg"
+        footer={
+          <>
+            <button onClick={() => setAcceptingId(null)} disabled={submitting} className="flex-1 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold transition-all">
+              Cancel
+            </button>
+            <button onClick={handleAccept} disabled={submitting} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-60">
+              {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Processing...</> : <><Check className="h-3.5 w-3.5" /> Accept & Update Stock</>}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          {acceptProducts.map((p: any, idx: number) => (
+            <div key={p.ingredient_id} className="bg-background border border-border rounded-xl p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-foreground text-sm">{p.ingredient_name}</span>
+                  <span className="text-xs text-muted-foreground block">Ordered: {p.quantity_ordered} {p.unit}</span>
+                </div>
+                <select
+                  value={p.status}
+                  onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], status: e.target.value }; setAcceptProducts(updated); }}
+                  className="text-xs bg-card border border-border text-foreground rounded-lg px-2 py-1 focus:outline-none"
+                >
+                  <option value="Good">Good</option>
+                  <option value="Damaged">Damaged</option>
+                  <option value="Missing">Missing</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-muted-foreground font-bold uppercase block mb-1">Qty Received ({p.unit})</label>
+                  <input
+                    type="number"
+                    value={p.quantity_received}
+                    onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], quantity_received: Number(e.target.value) }; setAcceptProducts(updated); }}
+                    className="w-full bg-card border border-border text-foreground text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted-foreground font-bold uppercase block mb-1">Batch Number</label>
+                  <input
+                    type="text"
+                    value={p.batch_number || ""}
+                    onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], batch_number: e.target.value }; setAcceptProducts(updated); }}
+                    placeholder="BTH-XXXX"
+                    className="w-full bg-card border border-border text-foreground text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] text-muted-foreground font-bold uppercase block mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    value={p.expiry_date || ""}
+                    onChange={e => { const updated = [...acceptProducts]; updated[idx] = { ...updated[idx], expiry_date: e.target.value }; setAcceptProducts(updated); }}
+                    className="w-full bg-card border border-border text-foreground text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       {/* Reject Modal */}
-      <AnimatePresence>
-        {rejectingId && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                <div>
-                  <h3 className="text-base font-bold text-foreground">Reject Delivery</h3>
-                  <p className="text-xs text-muted-foreground">Provide a reason for rejecting this supplier delivery</p>
-                </div>
-                <button onClick={() => setRejectingId(null)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"><X className="h-4 w-4" /></button>
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <textarea
-                  value={rejectReason}
-                  onChange={e => setRejectReason(e.target.value)}
-                  placeholder="e.g. Items spoiled on arrival, wrong products delivered, quantity mismatch exceeds threshold..."
-                  rows={4}
-                  className="w-full bg-background border border-border text-foreground text-xs rounded-xl px-4 py-3 focus:outline-none focus:border-rose-500/50 resize-none placeholder:text-muted-foreground/60"
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                <button onClick={() => setRejectingId(null)} disabled={submitting} className="flex-1 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold transition-all">Cancel</button>
-                <button onClick={handleReject} disabled={submitting} className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-60">
-                  {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Rejecting...</> : <><X className="h-3.5 w-3.5" /> Reject Delivery</>}
-                </button>
-              </div>
-            </motion.div>
+      <Modal
+        isOpen={!!rejectingId}
+        onClose={() => setRejectingId(null)}
+        title={
+          <div>
+            <h3 className="text-base font-bold text-foreground">Reject Delivery</h3>
+            <p className="text-xs text-muted-foreground">Provide a reason for rejecting this supplier delivery</p>
           </div>
-        )}
-      </AnimatePresence>
+        }
+        maxWidth="md"
+        footer={
+          <>
+            <button onClick={() => setRejectingId(null)} disabled={submitting} className="flex-1 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold transition-all">Cancel</button>
+            <button onClick={handleReject} disabled={submitting} className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-400 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-60">
+              {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Rejecting...</> : <><X className="h-3.5 w-3.5" /> Reject Delivery</>}
+            </button>
+          </>
+        }
+      >
+        <textarea
+          value={rejectReason}
+          onChange={e => setRejectReason(e.target.value)}
+          placeholder="e.g. Items spoiled on arrival, wrong products delivered, quantity mismatch exceeds threshold..."
+          rows={4}
+          className="w-full bg-background border border-border text-foreground text-xs rounded-xl px-4 py-3 focus:outline-none focus:border-rose-500/50 resize-none placeholder:text-muted-foreground/60"
+        />
+      </Modal>
 
       {/* Report Issue Modal */}
-      <AnimatePresence>
-        {reportingId && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
-                <div>
-                  <h3 className="text-base font-bold text-foreground">Report Delivery Issue</h3>
-                  <p className="text-xs text-muted-foreground">Log missing items, damaged goods, or other concerns</p>
-                </div>
-                <button onClick={() => setReportingId(null)} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"><X className="h-4 w-4" /></button>
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <textarea
-                  value={reportNote}
-                  onChange={e => setReportNote(e.target.value)}
-                  placeholder="e.g. 5kg of chicken was damaged/ice melted, 10kg onions were missing from the manifest, packaging torn on 3 boxes..."
-                  rows={4}
-                  className="w-full bg-background border border-border text-foreground text-xs rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 resize-none placeholder:text-muted-foreground/60"
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex gap-3 px-6 py-4 border-t border-border bg-muted/30 sticky bottom-0 z-10">
-                <button onClick={() => setReportingId(null)} disabled={submitting} className="flex-1 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold transition-all">Cancel</button>
-                <button onClick={handleReport} disabled={submitting} className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-60">
-                  {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting...</> : <><AlertTriangle className="h-3.5 w-3.5" /> Submit Report</>}
-                </button>
-              </div>
-            </motion.div>
+      <Modal
+        isOpen={!!reportingId}
+        onClose={() => setReportingId(null)}
+        title={
+          <div>
+            <h3 className="text-base font-bold text-foreground">Report Delivery Issue</h3>
+            <p className="text-xs text-muted-foreground">Log missing items, damaged goods, or other concerns</p>
           </div>
-        )}
-      </AnimatePresence>
+        }
+        maxWidth="md"
+        footer={
+          <>
+            <button onClick={() => setReportingId(null)} disabled={submitting} className="flex-1 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold transition-all">Cancel</button>
+            <button onClick={handleReport} disabled={submitting} className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-60">
+              {submitting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting...</> : <><AlertTriangle className="h-3.5 w-3.5" /> Submit Report</>}
+            </button>
+          </>
+        }
+      >
+        <textarea
+          value={reportNote}
+          onChange={e => setReportNote(e.target.value)}
+          placeholder="e.g. 5kg of chicken was damaged/ice melted, 10kg onions were missing from the manifest, packaging torn on 3 boxes..."
+          rows={4}
+          className="w-full bg-background border border-border text-foreground text-xs rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 resize-none placeholder:text-muted-foreground/60"
+        />
+      </Modal>
     </div>
   );
 }

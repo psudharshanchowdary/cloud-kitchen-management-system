@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { buttonVariants } from "@/components/ui/button";
+import { Modal } from "@/components/shared/modal";
 import { cn } from "@/lib/utils";
 
 interface ConfirmDialogProps {
@@ -35,34 +25,41 @@ export function ConfirmDialog({
   variant = "primary",
 }: ConfirmDialogProps) {
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogContent className="bg-card border border-border text-foreground rounded-2xl max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-lg font-bold text-foreground">{title}</AlertDialogTitle>
-          <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
-            {description}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="mt-6 gap-2">
-          <AlertDialogCancel 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      maxWidth="md"
+      footer={
+        <>
+          <button
+            type="button"
             onClick={onClose}
-            className="border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
+            className="px-4 py-2 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-sm font-semibold transition-colors"
           >
             {cancelText}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
             className={cn(
+              "px-4 py-2 text-sm font-semibold rounded-xl transition-all active:scale-95 shadow-lg",
               variant === "danger"
-                ? "bg-rose-500 hover:bg-rose-600 text-white"
-                : "bg-emerald-500 hover:bg-emerald-600 text-black font-semibold",
-              "rounded-xl border-none"
+                ? "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/10"
+                : "bg-emerald-500 hover:bg-emerald-600 text-black shadow-emerald-500/10"
             )}
           >
             {confirmText}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </button>
+        </>
+      }
+    >
+      <div className="text-muted-foreground text-sm leading-relaxed">
+        {description}
+      </div>
+    </Modal>
   );
 }
