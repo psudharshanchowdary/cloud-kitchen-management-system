@@ -136,8 +136,14 @@ export default function ExpensesPage() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }}
-                    itemStyle={{ color: "#fff" }}
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--popover))", 
+                      borderColor: "hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                    }}
+                    labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                     formatter={(value: any) => formatCurrency(value)}
                   />
                   <Legend 

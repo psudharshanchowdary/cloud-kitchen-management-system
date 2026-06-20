@@ -100,8 +100,14 @@ export default function AnalyticsPage() {
               <XAxis dataKey="date" stroke="#52525b" fontSize={11} tickLine={false} />
               <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
               <Tooltip 
-                contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }}
-                itemStyle={{ color: "#white" }}
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--popover))", 
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "var(--radius)",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                }}
+                labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                itemStyle={{ color: "hsl(var(--popover-foreground))" }}
               />
               <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRev)" strokeWidth={2} name="Gross Revenue" />
@@ -120,8 +126,14 @@ export default function AnalyticsPage() {
               <XAxis dataKey="hour" stroke="#52525b" fontSize={10} tickLine={false} />
               <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
               <Tooltip 
-                contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }}
-                itemStyle={{ color: "#white" }}
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--popover))", 
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "var(--radius)",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                }}
+                labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                itemStyle={{ color: "hsl(var(--popover-foreground))" }}
               />
               <Bar dataKey="orders" fill="#10b981" radius={[4, 4, 0, 0]} name="Orders Received" />
             </BarChart>
@@ -141,7 +153,14 @@ export default function AnalyticsPage() {
                 <XAxis type="number" stroke="#52525b" fontSize={11} tickLine={false} />
                 <YAxis dataKey="name" type="category" stroke="#52525b" fontSize={11} tickLine={false} width={100} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }}
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--popover))", 
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                  }}
+                  labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                  itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                   formatter={(value: any) => formatCurrency(value)}
                 />
                 <Bar dataKey="sales" fill="#10b981" radius={[0, 4, 4, 0]} name="Sales Volume" />
@@ -170,7 +189,14 @@ export default function AnalyticsPage() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a" }}
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--popover))", 
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                  }}
+                  labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                  itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                   formatter={(value: any) => formatCurrency(value)}
                 />
                 <Legend wrapperStyle={{ fontSize: "11px" }} />
