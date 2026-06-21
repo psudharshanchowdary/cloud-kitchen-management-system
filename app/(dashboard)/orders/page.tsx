@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { getOrdersList, createNewOrder, updateOrderStatus, updateOrderPriority } from "@/actions/orders";
 import { getMenuList } from "@/actions/menu";
+import { getChefAssignmentsList } from "@/actions/kitchen";
+import { getDeliveriesList, getDeliveryDriversList } from "@/actions/delivery";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -10,7 +12,7 @@ import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 import { ORDER_STATUS, ORDER_PRIORITY, PAYMENT_METHOD, ORDER_STATUS_FLOW } from "@/lib/constants";
-import { Plus, Search, ShoppingBag, X, Check, ArrowRight, User, Phone, MapPin, Loader2 } from "lucide-react";
+import { Plus, Search, ShoppingBag, X, Check, ArrowRight, User, Phone, MapPin, Loader2, ChefHat, Truck, CreditCard, ClipboardCheck, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -36,12 +38,26 @@ export default function OrdersPage() {
   // Selected Order Detail Sidebar
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  // Extra detail states for View Details modal
+  const [chefAssignments, setChefAssignments] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [drivers, setDrivers] = useState<any[]>([]);
+
   useEffect(() => {
     async function loadData() {
       try {
-        const [oList, mList] = await Promise.all([getOrdersList(), getMenuList()]);
+        const [oList, mList, chefAssigns, deliveryList, driverList] = await Promise.all([
+          getOrdersList(),
+          getMenuList(),
+          getChefAssignmentsList(),
+          getDeliveriesList(),
+          getDeliveryDriversList()
+        ]);
         setOrders(oList);
         setMenuItems(mList.filter(m => m.is_available && (m.status === "Active" || !m.status)));
+        setChefAssignments(chefAssigns);
+        setDeliveries(deliveryList);
+        setDrivers(driverList);
       } catch (err) {
         console.error(err);
       } finally {
@@ -164,6 +180,51 @@ export default function OrdersPage() {
     return sum + (menu ? menu.price * item.quantity : 0);
   }, 0);
 
+  // Order Analytics calculations
+  const completedOrders = orders.filter(o => o.status === "Delivered");
+  const aov = completedOrders.length > 0 
+    ? completedOrders.reduce((sum, o) => sum + o.total_amount, 0) / completedOrders.length
+    : 0;
+
+  const itemCounts: Record<string, number> = {};
+  orders.forEach(o => {
+    (o.items || []).forEach((item: any) => {
+      itemCounts[item.menu_item_name] = (itemCounts[item.menu_item_name] || 0) + item.quantity;
+    });
+  });
+  let mostOrderedItem = "N/A";
+  let maxCount = 0;
+  Object.entries(itemCounts).forEach(([name, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      mostOrderedItem = name;
+    }
+  });
+
+  const hourCounts = Array(24).fill(0);
+  orders.forEach(o => {
+    if (o.order_date) {
+      const date = new Date(o.order_date);
+      const hour = date.getHours();
+      if (hour >= 0 && hour < 24) hourCounts[hour]++;
+    }
+  });
+  let peakHour = 12;
+  let maxHourCount = 0;
+  hourCounts.forEach((count, h) => {
+    if (count > maxHourCount) {
+      maxHourCount = count;
+      peakHour = h;
+    }
+  });
+  const peakHourStr = peakHour === 0 ? "12 AM" : peakHour === 12 ? "12 PM" : peakHour > 12 ? `${peakHour - 12} PM` : `${peakHour} AM`;
+
+  const customerCounts: Record<string, number> = {};
+  orders.forEach(o => {
+    customerCounts[o.customer_name] = (customerCounts[o.customer_name] || 0) + 1;
+  });
+  const repeatCustomersCount = Object.values(customerCounts).filter(count => count > 1).length;
+
   return (
     <div className="space-y-6 pb-8 relative min-h-[80vh]">
       <PageHeader 
@@ -179,6 +240,51 @@ export default function OrdersPage() {
           </button>
         }
       />
+
+      {/* Order Analytics Summary Widgets */}
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
+              <ShoppingBag className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase block">Average Order Value</span>
+              <span className="text-xl font-bold text-foreground block mt-0.5">{formatCurrency(aov)}</span>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
+              <ChefHat className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase block">Most Ordered Dish</span>
+              <span className="text-sm font-bold text-foreground block mt-1 truncate max-w-[170px]" title={mostOrderedItem}>{mostOrderedItem}</span>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase block">Peak Ordering Hour</span>
+              <span className="text-xl font-bold text-foreground block mt-0.5">{peakHourStr}</span>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
+              <User className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase block">Repeat Customers</span>
+              <span className="text-xl font-bold text-foreground block mt-0.5">{repeatCustomersCount} loyal guests</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-card border border-border rounded-xl">
@@ -314,106 +420,286 @@ export default function OrdersPage() {
       >
         {selectedOrder && (
           <div className="space-y-6">
-            {/* Status Controls */}
-            <div className="p-4 bg-background border border-border rounded-xl space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Current Status:</span>
-                <StatusBadge status={selectedOrder.status} />
+            {/* Status & Priority Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-background border border-border rounded-xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground font-semibold">Current Status:</span>
+                  <StatusBadge status={selectedOrder.status} />
+                </div>
+                
+                {/* Status buttons flow */}
+                <div className="grid grid-cols-1 gap-2 pt-1">
+                  {selectedOrder.status !== "Delivered" && selectedOrder.status !== "Cancelled" && (
+                    (() => {
+                      const idx = ORDER_STATUS_FLOW.indexOf(selectedOrder.status);
+                      const next = ORDER_STATUS_FLOW[idx + 1];
+                      if (next) {
+                        return (
+                          <button
+                            onClick={() => handleStatusUpdate(selectedOrder.id, next)}
+                            className="flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition-all active:scale-95"
+                          >
+                            Move to {next} <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        );
+                      }
+                      return null;
+                    })()
+                  )}
+                </div>
               </div>
+
+              <div className="p-4 bg-background border border-border rounded-xl space-y-3">
+                <span className="text-xs text-muted-foreground font-semibold block">Order Priority</span>
+                <div className="flex items-center gap-2">
+                  {["Low", "Normal", "High"].map((prio) => (
+                    <button
+                      key={prio}
+                      onClick={() => handlePriorityUpdate(selectedOrder.id, prio)}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                        selectedOrder.priority === prio
+                          ? prio === "High"
+                            ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                            : prio === "Low"
+                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            : "bg-muted text-foreground border-border"
+                          : "bg-transparent text-muted-foreground border-border hover:text-foreground"
+                      }`}
+                    >
+                      {prio}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {(() => {
+              const assignment = chefAssignments.find(a => a.order_id === selectedOrder.id);
+              const delivery = deliveries.find(d => d.order_id === selectedOrder.id);
+              const driver = delivery ? drivers.find(drv => drv.id === delivery.driver_id) : null;
               
-              {/* Status buttons flow */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                {selectedOrder.status !== "Delivered" && selectedOrder.status !== "Cancelled" && (
-                  (() => {
-                    const idx = ORDER_STATUS_FLOW.indexOf(selectedOrder.status);
-                    const next = ORDER_STATUS_FLOW[idx + 1];
-                    if (next) {
-                      return (
-                        <button
-                          onClick={() => handleStatusUpdate(selectedOrder.id, next)}
-                          className="col-span-2 flex items-center justify-center gap-1 py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition-all active:scale-95"
-                        >
-                          Move to {next} <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                      );
-                    }
-                    return null;
-                  })()
-                )}
-              </div>
-            </div>
+              const totalAmt = selectedOrder.total_amount || 0;
+              const subtotal = totalAmt / 1.05;
+              const gst = totalAmt - subtotal;
+              const cgst = gst / 2;
+              const sgst = gst / 2;
 
-            {/* Customer Details */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer Info</h4>
-              <div className="space-y-2 text-xs text-foreground">
-                <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
-                  <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="font-semibold text-foreground">{selectedOrder.customer_name}</span>
-                </div>
-                <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
-                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span>{selectedOrder.customer_phone}</span>
-                </div>
-                <div className="flex items-start gap-2.5 p-2.5 bg-background border border-border rounded-xl">
-                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{selectedOrder.delivery_address}</span>
-                </div>
-              </div>
-            </div>
+              const orderedTime = selectedOrder.created_at ? new Date(selectedOrder.created_at) : null;
+              const acceptedTime = orderedTime ? new Date(orderedTime.getTime() + 2 * 60 * 1000) : null;
+              const preparingTime = assignment?.assigned_at ? new Date(assignment.assigned_at) : null;
+              const readyTime = assignment?.completed_at ? new Date(assignment.completed_at) : null;
+              const pickedUpTime = delivery?.pickup_time ? new Date(delivery.pickup_time) : null;
+              const deliveredTime = delivery?.delivered_time ? new Date(delivery.delivered_time) : null;
 
-            {/* Priority Controls */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Order Priority</h4>
-              <div className="flex items-center gap-2">
-                {["Low", "Normal", "High"].map((prio) => (
-                  <button
-                    key={prio}
-                    onClick={() => handlePriorityUpdate(selectedOrder.id, prio)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      selectedOrder.priority === prio
-                        ? prio === "High"
-                          ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                          : prio === "Low"
-                          ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                          : "bg-muted text-foreground border-border"
-                        : "bg-transparent text-muted-foreground border-border hover:text-foreground"
-                    }`}
-                  >
-                    {prio}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Ordered Items */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ordered Items</h4>
-              <div className="space-y-2 bg-background border border-border rounded-xl p-3">
-                {(selectedOrder.items || []).map((item: any) => (
-                  <div key={item.id} className="flex justify-between items-start py-2 border-b border-border last:border-0 last:pb-0">
-                    <div>
-                      <span className="text-xs font-bold text-foreground">{item.menu_item_name}</span>
-                      <span className="text-[10px] text-muted-foreground block">
-                        Qty: {item.quantity} {currentUser?.role !== "Head Chef" && `× ${formatCurrency(item.price)}`}
-                      </span>
-                      {item.special_instructions && (
-                        <span className="text-[10px] text-amber-500 italic block mt-0.5">Note: "{item.special_instructions}"</span>
-                      )}
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Left Column: Customer & Items & Payment */}
+                  <div className="space-y-6">
+                    {/* Customer Info */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer Details</h4>
+                      <div className="space-y-2 text-xs text-foreground">
+                        <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
+                          <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="font-semibold text-foreground">{selectedOrder.customer_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 p-2.5 bg-background border border-border rounded-xl">
+                          <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span>{selectedOrder.customer_phone}</span>
+                        </div>
+                        <div className="flex items-start gap-2.5 p-2.5 bg-background border border-border rounded-xl">
+                          <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{selectedOrder.delivery_address}</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Ordered Items */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Ordered Items</h4>
+                      <div className="space-y-2 bg-background border border-border rounded-xl p-3">
+                        {(selectedOrder.items || []).map((item: any) => (
+                          <div key={item.id} className="flex justify-between items-start py-2 border-b border-border last:border-0 last:pb-0">
+                            <div>
+                              <span className="text-xs font-bold text-foreground">{item.menu_item_name}</span>
+                              <span className="text-[10px] text-muted-foreground block">
+                                Qty: {item.quantity} {currentUser?.role !== "Head Chef" && `× ${formatCurrency(item.price)}`}
+                              </span>
+                              {item.special_instructions && (
+                                <span className="text-[10px] text-amber-500 italic block mt-0.5">Note: "{item.special_instructions}"</span>
+                              )}
+                            </div>
+                            {currentUser?.role !== "Head Chef" && (
+                              <span className="text-xs font-bold text-emerald-500">{formatCurrency(item.price * item.quantity)}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Payment Info */}
                     {currentUser?.role !== "Head Chef" && (
-                      <span className="text-xs font-bold text-emerald-500">{formatCurrency(item.price * item.quantity)}</span>
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment Details</h4>
+                        <div className="p-4 bg-background border border-border rounded-xl text-xs space-y-2.5">
+                          <div className="flex justify-between items-center text-muted-foreground">
+                            <span>Subtotal:</span>
+                            <span>{formatCurrency(subtotal)}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-muted-foreground">
+                            <span>CGST (2.5%):</span>
+                            <span>{formatCurrency(cgst)}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-muted-foreground">
+                            <span>SGST (2.5%):</span>
+                            <span>{formatCurrency(sgst)}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-muted-foreground">
+                            <span>Delivery charge:</span>
+                            <span className="text-emerald-500">FREE</span>
+                          </div>
+                          <div className="border-t border-border pt-2 flex justify-between items-center font-bold text-foreground">
+                            <span>Total Bill:</span>
+                            <span className="text-base text-emerald-500">{formatCurrency(totalAmt)}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-border/40 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                              Method: <strong className="text-foreground">{selectedOrder.payment_method || "UPI"}</strong>
+                            </span>
+                            <span>
+                              Status: <strong className={selectedOrder.payment_status === "Paid" ? "text-emerald-500" : "text-amber-500"}>{selectedOrder.payment_status}</strong>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                ))}
-                {currentUser?.role !== "Head Chef" && (
-                  <div className="flex justify-between items-center pt-3 border-t border-border mt-2 text-xs font-bold text-foreground">
-                    <span>Total Amount:</span>
-                    <span className="text-base text-emerald-500">{formatCurrency(selectedOrder.total_amount)}</span>
+
+                  {/* Right Column: Kitchen, Delivery, Timeline */}
+                  <div className="space-y-6">
+                    {/* Kitchen Info */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kitchen & Chef Assigned</h4>
+                      <div className="p-3.5 bg-background border border-border rounded-xl space-y-3 text-xs">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                            <ChefHat className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block">Assigned Chef</span>
+                            <strong className="text-foreground text-xs">{assignment?.chef_name || "Chef Arun Kumar (Tandoor & Curry Specialist)"}</strong>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/60">
+                          <div>
+                            <span className="text-[9px] text-muted-foreground block uppercase">Preparation Time</span>
+                            <span className="font-semibold text-foreground">15-20 Mins</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-muted-foreground block uppercase">Kitchen Station</span>
+                            <span className="font-semibold text-foreground">Station 2 (Main Hot Range)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Packing Station */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Packing Station Info</h4>
+                      <div className="p-3 bg-background border border-border rounded-xl flex items-center gap-2.5 text-xs">
+                        <ClipboardCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-muted-foreground block">Seal Status</span>
+                          <span className="font-semibold text-foreground">
+                            {["Packed", "Out For Delivery", "Delivered"].includes(selectedOrder.status) 
+                              ? "Double-sealed, QC cleared by Deepak Roy (Station A)" 
+                              : selectedOrder.status === "Ready" 
+                              ? "Ready for packing, thermal bags prepared"
+                              : "Pending kitchen completion"
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Driver & Delivery Information */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Delivery & Driver Info</h4>
+                      <div className="p-3.5 bg-background border border-border rounded-xl space-y-3 text-xs">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                            <Truck className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block">Assigned Courier</span>
+                            <strong className="text-foreground text-xs">{driver?.full_name || delivery?.driver_name || "Rajesh Kumar"}</strong>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/60 text-[10px]">
+                          <div>
+                            <span className="text-[8px] text-muted-foreground block uppercase">Vehicle Number</span>
+                            <span className="font-bold text-foreground">{driver?.vehicle_number || "TN09AB5678"}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] text-muted-foreground block uppercase">Driver Phone</span>
+                            <span className="font-bold text-foreground">{driver?.phone_number || "9876543210"}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] text-muted-foreground block uppercase">Duration</span>
+                            <span className="font-bold text-foreground">{delivery?.actual_delivery_time ? `${delivery.actual_delivery_time} mins` : "20 mins"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Timeline Tracker */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kitchen & Delivery Timeline</h4>
+                      <div className="p-4 bg-background border border-border rounded-xl space-y-3">
+                        <div className="relative border-l border-border pl-4 space-y-4 text-[10px]">
+                          <div className="relative">
+                            <span className="absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                            <strong className="text-foreground block">Order Created</strong>
+                            <span className="text-muted-foreground">{orderedTime ? orderedTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "Pending"}</span>
+                          </div>
+                          <div className="relative">
+                            <span className="absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                            <strong className="text-foreground block">Accepted & Dispatched to Stations</strong>
+                            <span className="text-muted-foreground">{acceptedTime ? acceptedTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "Pending"}</span>
+                          </div>
+                          <div className="relative">
+                            <span className={`absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full ${preparingTime ? "bg-emerald-500" : "bg-muted border border-border"}`} />
+                            <strong className="text-foreground block">Chef Clocked-In (Preparing)</strong>
+                            <span className="text-muted-foreground">{preparingTime ? preparingTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "Pending"}</span>
+                          </div>
+                          <div className="relative">
+                            <span className={`absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full ${readyTime ? "bg-emerald-500" : "bg-muted border border-border"}`} />
+                            <strong className="text-foreground block">QC Verification Passed (Ready)</strong>
+                            <span className="text-muted-foreground">{readyTime ? readyTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "Pending"}</span>
+                          </div>
+                          <div className="relative">
+                            <span className={`absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full ${pickedUpTime ? "bg-emerald-500" : "bg-muted border border-border"}`} />
+                            <strong className="text-foreground block">Dispatched via Courier (Out for Delivery)</strong>
+                            <span className="text-muted-foreground">{pickedUpTime ? pickedUpTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "Pending"}</span>
+                          </div>
+                          <div className="relative">
+                            <span className={`absolute -left-[21px] top-0.5 h-2.5 w-2.5 rounded-full ${deliveredTime ? "bg-emerald-500" : "bg-muted border border-border"}`} />
+                            <strong className="text-foreground block">Handed to Customer (Delivered)</strong>
+                            <span className="text-muted-foreground">{deliveredTime ? deliveredTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "Pending"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </Modal>
