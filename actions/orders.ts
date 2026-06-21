@@ -33,3 +33,12 @@ export async function updateOrderPriority(id: string, priority: OrderPriority): 
 export async function updateOrderItemStatus(itemId: string, status: "Pending" | "Cooking" | "Ready"): Promise<OrderItem> {
   return db.updateOrderItemStatus(itemId, status);
 }
+
+export async function getOrderByIdAction(id: string): Promise<Order | null> {
+  try {
+    return db.getOrderById(id);
+  } catch (error) {
+    console.error("Failed to get order by id", error);
+    return null;
+  }
+}
