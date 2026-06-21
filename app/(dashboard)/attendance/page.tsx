@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAttendanceReport } from "@/actions/attendance";
 import { getStaffList } from "@/actions/staff";
+import { getAnalyticsData } from "@/actions/analytics";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ChartCard } from "@/components/shared/chart-card";
+import { PeriodSelector } from "@/components/shared/period-selector";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { formatDate } from "@/lib/utils";
 import { Search, Calendar, Clock, RefreshCw, UserCheck, X } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 export default function AttendancePage() {
   const [records, setRecords] = useState<any[]>([]);
@@ -17,24 +21,33 @@ export default function AttendancePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const loadData = async () => {
+  // Period filter state
+  const [period, setPeriod] = useState("Last 7 Days");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [analytics, setAnalytics] = useState<any>(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      const [list, staffList] = await Promise.all([
-        getAttendanceReport(),
-        getStaffList()
+      const [list, staffList, analyticsRes] = await Promise.all([
+        getAttendanceReport(period, customStart, customEnd),
+        getStaffList(),
+        getAnalyticsData(period, customStart, customEnd)
       ]);
       setRecords(list);
       setStaff(staffList);
+      setAnalytics(analyticsRes);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, customStart, customEnd]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const filteredRecords = records.filter(r => {
     const matchesDate = r.date === filterDate;
@@ -63,6 +76,30 @@ export default function AttendancePage() {
           </button>
         }
       />
+
+      {/* Date Filters Bar */}
+      <div className="p-4 bg-card border border-border rounded-2xl shadow-sm">
+        <PeriodSelector
+          selectedPeriod={period}
+          onPeriodChange={(newPeriod) => {
+            setPeriod(newPeriod);
+            if (newPeriod !== "Custom") {
+              setCustomStart("");
+              setCustomEnd("");
+            } else {
+              const today = new Date();
+              const thirtyDaysAgo = new Date();
+              thirtyDaysAgo.setDate(today.getDate() - 30);
+              setCustomStart(thirtyDaysAgo.toISOString().split("T")[0]);
+              setCustomEnd(today.toISOString().split("T")[0]);
+            }
+          }}
+          customStart={customStart}
+          onCustomStartChange={setCustomStart}
+          customEnd={customEnd}
+          onCustomEndChange={setCustomEnd}
+        />
+      </div>
 
       {/* Roster KPI Summary widgets */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -106,6 +143,39 @@ export default function AttendancePage() {
           </div>
         </div>
       </div>
+
+      {/* Attendance Chart Section */}
+      {analytics && (
+        <ChartCard 
+          title="Daily Roster Check-In Rate (Staff Attendance)" 
+          description="Total crew members present or late across the selected period"
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={analytics.revenueTrend}>
+              <defs>
+                <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="date" stroke="#52525b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--popover))", 
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "var(--radius)",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                }}
+                labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+              />
+              <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Area type="monotone" dataKey="attendance" stroke="#10b981" fillOpacity={1} fill="url(#colorAttendance)" strokeWidth={2} name="Staff Present (Count)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
 
       {/* Date Filter & Search bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-card border border-border rounded-xl">

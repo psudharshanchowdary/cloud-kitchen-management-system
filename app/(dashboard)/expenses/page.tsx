@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getExpensesList, recordExpense } from "@/actions/expenses";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { ChartCard } from "@/components/shared/chart-card";
+import { PeriodSelector } from "@/components/shared/period-selector";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { EXPENSE_CATEGORIES } from "@/lib/constants";
 import { Plus, Search, Wallet, X, Loader2 } from "lucide-react";
@@ -30,19 +31,26 @@ export default function ExpensesPage() {
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split("T")[0]);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const list = await getExpensesList();
-        setExpenses(list);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  // Period Filter State
+  const [period, setPeriod] = useState("All");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await getExpensesList(period, customStart, customEnd);
+      setExpenses(list);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  }, [period, customStart, customEnd]);
+
+  useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleRecordExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +114,30 @@ export default function ExpensesPage() {
           </button>
         }
       />
+
+      {/* Date Filters Bar */}
+      <div className="p-4 bg-card border border-border rounded-2xl shadow-sm">
+        <PeriodSelector
+          selectedPeriod={period}
+          onPeriodChange={(newPeriod) => {
+            setPeriod(newPeriod);
+            if (newPeriod !== "Custom") {
+              setCustomStart("");
+              setCustomEnd("");
+            } else {
+              const today = new Date();
+              const thirtyDaysAgo = new Date();
+              thirtyDaysAgo.setDate(today.getDate() - 30);
+              setCustomStart(thirtyDaysAgo.toISOString().split("T")[0]);
+              setCustomEnd(today.toISOString().split("T")[0]);
+            }
+          }}
+          customStart={customStart}
+          onCustomStartChange={setCustomStart}
+          customEnd={customEnd}
+          onCustomEndChange={setCustomEnd}
+        />
+      </div>
 
       {/* Grid of chart and list */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

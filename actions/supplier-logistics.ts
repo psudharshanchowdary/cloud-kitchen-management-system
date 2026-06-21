@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { SupplierDelivery } from "@/types";
 import { cookies } from "next/headers";
+import { getStartDateForPeriod, getEndDateForPeriod, isWithinPeriod } from "@/lib/date-utils";
 
 async function getLoggedUser() {
   try {
@@ -124,7 +125,7 @@ export async function reportDeliveryIssueAction(
   return updated;
 }
 
-export async function getSupplierLogisticsDashboardData() {
+export async function getSupplierLogisticsDashboardData(period: string = "All", customStart?: string, customEnd?: string) {
   try {
     const [deliveries, suppliers, purchaseOrders] = await Promise.all([
       db.getSupplierDeliveries(),
@@ -132,32 +133,39 @@ export async function getSupplierLogisticsDashboardData() {
       db.getPurchaseOrders()
     ]);
 
+    let targetDeliveries = deliveries;
+    if (period !== "All") {
+      const startDate = getStartDateForPeriod(period, customStart);
+      const endDate = getEndDateForPeriod(period, customEnd);
+      targetDeliveries = deliveries.filter(d => isWithinPeriod(d.created_at, startDate, endDate));
+    }
+
     const todayStr = new Date().toISOString().split("T")[0];
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
     const weekStartStr = weekStart.toISOString().split("T")[0];
 
-    // Today's deliveries
+    // Today's deliveries (always absolute)
     const todayDeliveries = deliveries.filter(d => d.created_at.startsWith(todayStr));
     const totalToday = todayDeliveries.length;
 
-    // This week's deliveries
+    // This week's deliveries (always absolute)
     const weekDeliveries = deliveries.filter(d => d.created_at >= weekStartStr);
     const totalThisWeek = weekDeliveries.length;
 
-    // Delayed
-    const delayedDeliveries = deliveries.filter(d => d.status === "Delayed");
+    // Delayed deliveries in selected target
+    const delayedDeliveries = targetDeliveries.filter(d => d.status === "Delayed");
     const delayedCount = delayedDeliveries.length;
 
-    // Success rate
-    const completedCount = deliveries.filter(d => d.status === "Delivered").length;
-    const successRate = deliveries.length > 0
-      ? Math.round((completedCount / deliveries.length) * 100)
+    // Success rate in selected target
+    const completedCount = targetDeliveries.filter(d => d.status === "Delivered").length;
+    const successRate = targetDeliveries.length > 0
+      ? Math.round((completedCount / targetDeliveries.length) * 100)
       : 100;
 
-    // Most used supplier
+    // Most used supplier in selected target
     const supplierCounts: Record<string, { name: string; count: number; successCount: number }> = {};
-    deliveries.forEach(d => {
+    targetDeliveries.forEach(d => {
       if (!supplierCounts[d.supplier_id]) {
         supplierCounts[d.supplier_id] = { name: d.supplier_name, count: 0, successCount: 0 };
       }
@@ -168,7 +176,7 @@ export async function getSupplierLogisticsDashboardData() {
     const sortedSuppliers = Object.values(supplierCounts).sort((a, b) => b.count - a.count);
     const mostUsedSupplier = sortedSuppliers[0]?.name || "N/A";
 
-    // Supplier performance ratings (success %)
+    // Supplier performance ratings in selected target
     const supplierPerformance = sortedSuppliers.map(s => ({
       name: s.name,
       totalDeliveries: s.count,
@@ -176,7 +184,6 @@ export async function getSupplierLogisticsDashboardData() {
       successCount: s.successCount
     }));
 
-    // Delayed supplier names
     const delayedSupplierNames = [...new Set(delayedDeliveries.map(d => d.supplier_name))];
 
     return {
@@ -187,10 +194,10 @@ export async function getSupplierLogisticsDashboardData() {
       mostUsedSupplier,
       supplierPerformance,
       delayedSupplierNames,
-      recentDeliveries: deliveries
+      recentDeliveries: targetDeliveries
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 10),
-      allDeliveries: deliveries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+      allDeliveries: targetDeliveries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
       pendingPOs: purchaseOrders.filter(po => po.status === "Ordered" || po.status === "Pending")
     };
   } catch (error) {

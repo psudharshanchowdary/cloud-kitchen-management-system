@@ -1,37 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getDeliveryDashboardData } from "@/actions/delivery";
+import { getAnalyticsData } from "@/actions/analytics";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
+import { ChartCard } from "@/components/shared/chart-card";
 import { CardSkeleton } from "@/components/shared/loading-skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { PeriodSelector } from "@/components/shared/period-selector";
 import { Truck, Clock, Sparkles, UserCheck, AlertTriangle, RefreshCw, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, Tooltip, Legend 
+} from "recharts";
 
 export default function DeliveryPage() {
   const [data, setData] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
+  // Period Filter State
+  const [period, setPeriod] = useState("Last 7 Days");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await getDeliveryDashboardData();
-      setData(res);
+      const [dashRes, analyticsRes] = await Promise.all([
+        getDeliveryDashboardData(period, customStart, customEnd),
+        getAnalyticsData(period, customStart, customEnd)
+      ]);
+      setData(dashRes);
+      setAnalytics(analyticsRes);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load delivery metrics");
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, customStart, customEnd]);
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 15000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [loadData]);
 
-  if (loading) {
+  const handlePeriodChange = (newPeriod: string) => {
+    setPeriod(newPeriod);
+    if (newPeriod !== "Custom") {
+      setCustomStart("");
+      setCustomEnd("");
+    } else {
+      const today = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      setCustomStart(thirtyDaysAgo.toISOString().split("T")[0]);
+      setCustomEnd(today.toISOString().split("T")[0]);
+    }
+  };
+
+  const tooltipStyle = {
+    contentStyle: { 
+      backgroundColor: "hsl(var(--popover))", 
+      borderColor: "hsl(var(--border))",
+      borderRadius: "var(--radius)",
+      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+    },
+    labelStyle: { color: "hsl(var(--popover-foreground))", fontWeight: "bold" },
+    itemStyle: { color: "hsl(var(--popover-foreground))" }
+  };
+
+  if (loading || !data || !analytics) {
     return (
       <div className="space-y-6">
         <PageHeader title="Delivery Operations" description="Loading courier analytics..." />
@@ -53,14 +94,7 @@ export default function DeliveryPage() {
     fastestDriver,
     driverAvailability,
     rankings
-  } = data || {
-    totalDeliveries: 0,
-    delayedDeliveries: 0,
-    averageDeliveryTime: "0 Minutes",
-    fastestDriver: "N/A",
-    driverAvailability: "0 / 0",
-    rankings: []
-  };
+  } = data;
 
   return (
     <div className="space-y-6 pb-8">
@@ -77,6 +111,18 @@ export default function DeliveryPage() {
           </button>
         }
       />
+
+      {/* Date Filters Bar */}
+      <div className="p-4 bg-card border border-border rounded-2xl shadow-sm">
+        <PeriodSelector
+          selectedPeriod={period}
+          onPeriodChange={handlePeriodChange}
+          customStart={customStart}
+          onCustomStartChange={setCustomStart}
+          customEnd={customEnd}
+          onCustomEndChange={setCustomEnd}
+        />
+      </div>
 
       {/* Stats Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -111,6 +157,41 @@ export default function DeliveryPage() {
           description="Completed > 30 mins"
           trend={delayedDeliveries > 0 ? { value: delayedDeliveries, isPositive: false } : undefined}
         />
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Delivery Durations Trend */}
+        <ChartCard 
+          title="Courier Delivery Duration Trend" 
+          description="Average delivery duration in minutes for completed courier runs"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={analytics.revenueTrend}>
+              <XAxis dataKey="date" stroke="#52525b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
+              <Tooltip {...tooltipStyle} />
+              <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Line type="monotone" dataKey="deliveryTime" stroke="#f59e0b" strokeWidth={3} activeDot={{ r: 8 }} name="Avg Trip Duration (Mins)" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Trips volume trend */}
+        <ChartCard 
+          title="Completed Delivery Trips" 
+          description="Volume of completed order delivery trips over time"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.revenueTrend}>
+              <XAxis dataKey="date" stroke="#52525b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
+              <Tooltip {...tooltipStyle} />
+              <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="orders" fill="#10b981" radius={[4, 4, 0, 0]} name="Completed Deliveries" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
       {/* Driver Performance Ranking Table */}

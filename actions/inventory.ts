@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { InventoryItem, InventoryTransaction } from "@/types";
+import { getStartDateForPeriod, getEndDateForPeriod, isWithinPeriod } from "@/lib/date-utils";
 
 export async function getInventoryList(): Promise<InventoryItem[]> {
   try {
@@ -31,10 +32,18 @@ export async function recordStockAdjustment(
   return db.adjustStock(id, delta, type, notes);
 }
 
-export async function getStockTransactions(): Promise<InventoryTransaction[]> {
+export async function getStockTransactions(period: string = "All", customStart?: string, customEnd?: string): Promise<InventoryTransaction[]> {
   try {
     const list = await db.getInventoryTransactions();
-    return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    if (period === "All") {
+      return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    const startDate = getStartDateForPeriod(period, customStart);
+    const endDate = getEndDateForPeriod(period, customEnd);
+    
+    return list
+      .filter(t => isWithinPeriod(t.created_at, startDate, endDate))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   } catch (error) {
     console.error("Failed to fetch inventory transactions", error);
     return [];

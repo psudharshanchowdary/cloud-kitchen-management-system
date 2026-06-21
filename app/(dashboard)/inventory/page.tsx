@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getInventoryList, createInventoryItem, recordStockAdjustment, getStockTransactions } from "@/actions/inventory";
 import { getSuppliersList } from "@/actions/suppliers";
+import { getAnalyticsData } from "@/actions/analytics";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Modal } from "@/components/shared/modal";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
+import { ChartCard } from "@/components/shared/chart-card";
+import { PeriodSelector } from "@/components/shared/period-selector";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 import { INVENTORY_CATEGORIES } from "@/lib/constants";
 import { Plus, Search, RefreshCw, AlertTriangle, ArrowUpRight, ArrowDownRight, ClipboardList, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<any[]>([]);
@@ -44,27 +48,36 @@ export default function InventoryPage() {
   // Log View Modal
   const [logOpen, setLogOpen] = useState(false);
 
-  const loadData = async () => {
+  // Period filter state
+  const [period, setPeriod] = useState("Last 7 Days");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [analytics, setAnalytics] = useState<any>(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      const [invList, supList, trList] = await Promise.all([
+      const [invList, supList, trList, analyticsRes] = await Promise.all([
         getInventoryList(),
         getSuppliersList(),
-        getStockTransactions()
+        getStockTransactions(period, customStart, customEnd),
+        getAnalyticsData(period, customStart, customEnd)
       ]);
       setInventory(invList);
       setSuppliers(supList);
       setTransactions(trList);
+      setAnalytics(analyticsRes);
       if (supList.length > 0) setSupplierId(supList[0].id);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, customStart, customEnd]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +177,30 @@ export default function InventoryPage() {
         }
       />
 
+      {/* Date Filters Bar */}
+      <div className="p-4 bg-card border border-border rounded-2xl shadow-sm">
+        <PeriodSelector
+          selectedPeriod={period}
+          onPeriodChange={(newPeriod) => {
+            setPeriod(newPeriod);
+            if (newPeriod !== "Custom") {
+              setCustomStart("");
+              setCustomEnd("");
+            } else {
+              const today = new Date();
+              const thirtyDaysAgo = new Date();
+              thirtyDaysAgo.setDate(today.getDate() - 30);
+              setCustomStart(thirtyDaysAgo.toISOString().split("T")[0]);
+              setCustomEnd(today.toISOString().split("T")[0]);
+            }
+          }}
+          customStart={customStart}
+          onCustomStartChange={setCustomStart}
+          customEnd={customEnd}
+          onCustomEndChange={setCustomEnd}
+        />
+      </div>
+
       {/* Summary KPI Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4">
@@ -200,6 +237,39 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      {/* Chart Section */}
+      {analytics && (
+        <ChartCard 
+          title="Ingredient Consumption Trend (Inventory Usage)" 
+          description="Ingredient OUT volumes deducted from stock based on recipe execution mapping"
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={analytics.revenueTrend}>
+              <defs>
+                <linearGradient id="colorInvUsage" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ec4899" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#ec4899" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="date" stroke="#52525b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--popover))", 
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "var(--radius)",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                }}
+                labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+              />
+              <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Area type="monotone" dataKey="inventoryUsage" stroke="#ec4899" fillOpacity={1} fill="url(#colorInvUsage)" strokeWidth={2} name="Ingredients Used (Units)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
 
       {/* Filter toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-card border border-border rounded-xl">

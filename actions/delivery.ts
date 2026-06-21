@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { Delivery, DeliveryDriver } from "@/types";
 import { cookies } from "next/headers";
+import { getStartDateForPeriod, getEndDateForPeriod, isWithinPeriod } from "@/lib/date-utils";
 
 async function getLoggedUser() {
   try {
@@ -94,7 +95,7 @@ export async function completeDeliveryAction(orderId: string): Promise<boolean> 
   return true;
 }
 
-export async function getDeliveryDashboardData() {
+export async function getDeliveryDashboardData(period: string = "All", customStart?: string, customEnd?: string) {
   try {
     const [drivers, deliveries, orders] = await Promise.all([
       db.getDeliveryDrivers(),
@@ -102,10 +103,20 @@ export async function getDeliveryDashboardData() {
       db.getOrders()
     ]);
 
-    const completedDeliveries = deliveries.filter(d => d.delivery_status === "Delivered");
+    let targetDeliveries = deliveries;
+    if (period !== "All") {
+      const startDate = getStartDateForPeriod(period, customStart);
+      const endDate = getEndDateForPeriod(period, customEnd);
+      targetDeliveries = deliveries.filter(d => {
+        const dateToCheck = d.delivered_time || d.pickup_time || d.delivery_start_time;
+        return dateToCheck && isWithinPeriod(dateToCheck, startDate, endDate);
+      });
+    }
+
+    const completedDeliveries = targetDeliveries.filter(d => d.delivery_status === "Delivered");
     const totalDeliveries = completedDeliveries.length;
 
-    // 1. Availability stats
+    // 1. Availability stats (live values, not filtered by period since it's the current state)
     const totalDrivers = drivers.length;
     const availableDrivers = drivers.filter(d => d.status === "Available").length;
     const driverAvailability = `${availableDrivers} / ${totalDrivers}`;
@@ -153,7 +164,7 @@ export async function getDeliveryDashboardData() {
       };
     });
 
-    // Populate stats
+    // Populate stats based on filtered completed deliveries
     completedDeliveries.forEach(del => {
       const stats = driverPerformance[del.driver_id];
       if (stats) {
@@ -180,7 +191,7 @@ export async function getDeliveryDashboardData() {
       return a.avgDuration - b.avgDuration;
     });
 
-    // Find fastest driver: driver with completed deliveries and lowest average duration
+    // Find fastest driver
     const driversWithDeliveries = rankings.filter(r => r.completedCount > 0);
     driversWithDeliveries.sort((a, b) => a.avgDuration - b.avgDuration);
     const fastestDriver = driversWithDeliveries.length > 0

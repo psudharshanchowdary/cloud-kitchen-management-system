@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { Attendance } from "@/types";
+import { getStartDateForPeriod, getEndDateForPeriod, isWithinPeriod } from "@/lib/date-utils";
 
 export async function getAttendanceToday(): Promise<Attendance[]> {
   try {
@@ -22,18 +23,19 @@ export async function clockOut(staffId: string): Promise<Attendance> {
   return db.clockOut(staffId);
 }
 
-export async function getAttendanceReport(dateRange?: { from: string; to: string }): Promise<Attendance[]> {
+export async function getAttendanceReport(
+  period: string = "All",
+  customStart?: string,
+  customEnd?: string
+): Promise<Attendance[]> {
   try {
     const list = await db.getAttendance();
-    if (!dateRange) return list;
+    if (period === "All") return list;
     
-    const fromTime = new Date(dateRange.from).getTime();
-    const toTime = new Date(dateRange.to).getTime();
+    const startDate = getStartDateForPeriod(period, customStart);
+    const endDate = getEndDateForPeriod(period, customEnd);
 
-    return list.filter(a => {
-      const t = new Date(a.date).getTime();
-      return t >= fromTime && t <= toTime;
-    });
+    return list.filter(a => isWithinPeriod(a.date, startDate, endDate));
   } catch (error) {
     console.error("Failed to get attendance report", error);
     return [];

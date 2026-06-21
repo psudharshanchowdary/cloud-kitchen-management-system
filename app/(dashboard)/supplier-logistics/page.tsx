@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { getSupplierLogisticsDashboardData, acceptSupplierDeliveryAction, rejectSupplierDeliveryAction, reportDeliveryIssueAction } from "@/actions/supplier-logistics";
+import { getAnalyticsData } from "@/actions/analytics";
 import { PageHeader } from "@/components/shared/page-header";
 import { Modal } from "@/components/shared/modal";
 import { StatCard } from "@/components/shared/stat-card";
+import { ChartCard } from "@/components/shared/chart-card";
+import { PeriodSelector } from "@/components/shared/period-selector";
 import { CardSkeleton } from "@/components/shared/loading-skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Truck, Package, AlertTriangle, CheckCircle2, Clock, RefreshCw, ChevronDown, ChevronUp, X, Check, Loader2, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 function formatLocalTime(isoString: string) {
   if (!isoString) return "—";
@@ -49,22 +53,32 @@ export default function SupplierLogisticsPage() {
   // Filter
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const loadData = async () => {
+  // Period filter state
+  const [period, setPeriod] = useState("Last 7 Days");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [analytics, setAnalytics] = useState<any>(null);
+
+  const loadData = useCallback(async () => {
     try {
-      const res = await getSupplierLogisticsDashboardData();
+      const [res, analyticsRes] = await Promise.all([
+        getSupplierLogisticsDashboardData(period, customStart, customEnd),
+        getAnalyticsData(period, customStart, customEnd)
+      ]);
       setData(res);
+      setAnalytics(analyticsRes);
     } catch (err) {
       toast.error("Failed to load logistics data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, customStart, customEnd]);
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 20000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadData]);
 
   const openAccept = (delivery: any) => {
     setAcceptingId(delivery.id);
@@ -159,6 +173,30 @@ export default function SupplierLogisticsPage() {
         }
       />
 
+      {/* Date Filters Bar */}
+      <div className="p-4 bg-card border border-border rounded-2xl shadow-sm">
+        <PeriodSelector
+          selectedPeriod={period}
+          onPeriodChange={(newPeriod) => {
+            setPeriod(newPeriod);
+            if (newPeriod !== "Custom") {
+              setCustomStart("");
+              setCustomEnd("");
+            } else {
+              const today = new Date();
+              const thirtyDaysAgo = new Date();
+              thirtyDaysAgo.setDate(today.getDate() - 30);
+              setCustomStart(thirtyDaysAgo.toISOString().split("T")[0]);
+              setCustomEnd(today.toISOString().split("T")[0]);
+            }
+          }}
+          customStart={customStart}
+          onCustomStartChange={setCustomStart}
+          customEnd={customEnd}
+          onCustomEndChange={setCustomEnd}
+        />
+      </div>
+
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
         <StatCard title="Deliveries Today" value={totalToday || 0} icon={Truck} description="Supplier runs today" />
@@ -167,6 +205,33 @@ export default function SupplierLogisticsPage() {
         <StatCard title="Delivery Success Rate" value={`${successRate || 100}%`} icon={CheckCircle2} description="On-time completion rate" />
         <StatCard title="Most Used Supplier" value={mostUsedSupplier || "N/A"} icon={Truck} description="Highest frequency supplier" />
       </div>
+
+      {/* Supplier Deliveries Chart */}
+      {analytics && (
+        <ChartCard 
+          title="Supplier Deliveries Success Trend" 
+          description="Daily supplier deliveries completed successfully"
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={analytics.revenueTrend}>
+              <XAxis dataKey="date" stroke="#52525b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#52525b" fontSize={11} tickLine={false} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "hsl(var(--popover))", 
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "var(--radius)",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)"
+                }}
+                labelStyle={{ color: "hsl(var(--popover-foreground))", fontWeight: "bold" }}
+                itemStyle={{ color: "hsl(var(--popover-foreground))" }}
+              />
+              <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="supplierDeliveries" fill="#10b981" radius={[4, 4, 0, 0]} name="Completed Deliveries" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
 
       {/* Supplier Performance Table */}
       {isOwner && supplierPerformance?.length > 0 && (
