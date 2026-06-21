@@ -6,8 +6,9 @@ import { PageHeader } from "@/components/shared/page-header";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate, formatTime } from "@/lib/utils";
-import { User, Shield, Key, ListFilter, ClipboardList, Moon, Sun } from "lucide-react";
+import { User, Shield, Key, ListFilter, ClipboardList, Moon, Sun, Sliders } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 export default function SettingsPage() {
   const user = useAuthStore((state) => state.user);
@@ -106,6 +107,22 @@ export default function SettingsPage() {
                 <Moon className="h-4 w-4" /> Dark Mode
               </button>
             </div>
+          </div>
+
+          {/* Accessibility Settings Card */}
+          <div className="bg-card border border-border rounded-2xl p-6 glow-sm space-y-4">
+            <h3 className="text-base font-bold text-foreground mb-2 flex items-center gap-2">
+              <Sliders className="h-5 w-5 text-emerald-500" /> Accessibility Settings
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Configure global text size scaling, compact or comfortable layout spacing densities, and high contrast options.
+            </p>
+            <Link
+              href="/settings/accessibility"
+              className="w-full flex items-center justify-center py-2.5 px-4 bg-muted hover:bg-accent border border-border text-foreground rounded-xl text-xs font-semibold transition-all"
+            >
+              Open Accessibility Controls
+            </Link>
           </div>
 
         </div>

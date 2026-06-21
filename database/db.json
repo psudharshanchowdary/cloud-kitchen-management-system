@@ -93344,6 +93344,96 @@
       "details": "Queen Rajkumari logged in successfully.",
       "id": "log-1782024702095",
       "created_at": "2026-06-21T06:51:42.095Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1782026002353",
+      "created_at": "2026-06-21T07:13:22.353Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGIN",
+      "details": "Arvind Swamy logged in successfully.",
+      "id": "log-1782026006384",
+      "created_at": "2026-06-21T07:13:26.384Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGOUT",
+      "details": "Arvind Swamy logged out.",
+      "id": "log-1782026032282",
+      "created_at": "2026-06-21T07:13:52.282Z"
+    },
+    {
+      "user_id": "user-headchef-1",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGIN",
+      "details": "Sanjay Kapoor logged in successfully.",
+      "id": "log-1782026035700",
+      "created_at": "2026-06-21T07:13:55.700Z"
+    },
+    {
+      "user_id": "user-headchef-1",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGOUT",
+      "details": "Sanjay Kapoor logged out.",
+      "id": "log-1782026110714",
+      "created_at": "2026-06-21T07:15:10.714Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1782026114881",
+      "created_at": "2026-06-21T07:15:14.881Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1782026246466",
+      "created_at": "2026-06-21T07:17:26.466Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGIN",
+      "details": "Deepak Roy logged in successfully.",
+      "id": "log-1782026250172",
+      "created_at": "2026-06-21T07:17:30.172Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGOUT",
+      "details": "Deepak Roy logged out.",
+      "id": "log-1782026272569",
+      "created_at": "2026-06-21T07:17:52.569Z"
+    },
+    {
+      "user_id": "user-headchef-1",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGIN",
+      "details": "Sanjay Kapoor logged in successfully.",
+      "id": "log-1782026278463",
+      "created_at": "2026-06-21T07:17:58.463Z"
     }
   ],
   "kitchen_stations": [

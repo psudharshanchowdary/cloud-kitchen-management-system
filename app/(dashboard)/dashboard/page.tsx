@@ -965,11 +965,11 @@ export default function DashboardPage() {
             <div className="border-t border-border pt-4">
               <span className="text-xs font-bold text-foreground uppercase tracking-wider block mb-3">Goods Checked-In This Week</span>
               <div className="space-y-2 max-h-48 overflow-y-auto text-xs text-muted-foreground pr-1">
-                {supplierDeliveries.filter(d => d.status === "Delivered").slice(0, 3).map((d: any) => 
-                  (d.products || []).map((p: any) => (
-                    <div key={p.batch_number} className="flex justify-between items-center p-2 bg-background border border-border rounded-lg">
+                {supplierDeliveries.filter(d => d.status === "Delivered").slice(0, 3).flatMap((d: any, dIdx: number) => 
+                  (d.products || []).map((p: any, pIdx: number) => (
+                    <div key={`${d.id || dIdx}-${p.ingredient_id || p.ingredient_name || pIdx}`} className="flex justify-between items-center p-2 bg-background border border-border rounded-lg">
                       <span className="font-semibold text-foreground">{p.ingredient_name}</span>
-                      <span>{p.quantity_received} {p.unit} checked in (Batch: {p.batch_number})</span>
+                      <span>{p.quantity_received} {p.unit} checked in (Batch: {p.batch_number || "N/A"})</span>
                     </div>
                   ))
                 )}

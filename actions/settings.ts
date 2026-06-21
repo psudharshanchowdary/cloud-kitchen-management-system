@@ -29,3 +29,13 @@ export async function markNotificationAsRead(id: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function updateUserPreferencesAction(userId: string, preferences: any) {
+  try {
+    const updatedUser = await db.updateUserPreferences(userId, preferences);
+    return { success: true, user: updatedUser };
+  } catch (error: any) {
+    console.error("Failed to update user preferences", error);
+    return { success: false, error: error.message || "Failed to update preferences" };
+  }
+}

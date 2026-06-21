@@ -1,5 +1,11 @@
 import { UserRole, OrderStatus, OrderPriority, ItemStatus, PaymentStatus, PaymentMethod } from "@/lib/constants";
 
+export interface UserPreferences {
+  textSize: "small" | "normal" | "medium" | "large" | "extra-large";
+  density: "compact" | "normal" | "comfortable";
+  highContrast: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -8,6 +14,7 @@ export interface User {
   phone?: string;
   is_active: boolean;
   created_at: string;
+  preferences?: UserPreferences;
 }
 
 export interface Staff {

@@ -202,3 +202,112 @@
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+/* ─── High Contrast Mode Overrides ────────────────────────── */
+.high-contrast {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 10%;
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+  --primary: 142.1 76.2% 25%; /* Darker green */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 90%;
+  --secondary-foreground: 0 0% 0%;
+  --ring: 0 0% 0%;
+}
+
+.high-contrast.dark {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 0%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 90%;
+  --border: 0 0% 100%;
+  --input: 0 0% 100%;
+  --primary: 142.1 70.6% 65%; /* Lighter green */
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 0 0% 100%;
+  --ring: 0 0% 100%;
+}
+
+/* Ensure borders are visible in high contrast mode */
+.high-contrast *, .high-contrast.dark * {
+  border-color: hsl(var(--border)) !important;
+}
+
+.high-contrast hr, .high-contrast.dark hr {
+  border-top-width: 2px !important;
+}
+
+/* Add clear focus rings and outlines for form elements */
+.high-contrast button, 
+.high-contrast select, 
+.high-contrast input, 
+.high-contrast textarea {
+  outline: 2px solid currentColor !important;
+  outline-offset: 1px !important;
+}
+
+/* ─── Comfortable View Modifiers ─────────────────────────── */
+.comfortable-view td,
+.comfortable-view th {
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+.comfortable-view .space-y-6 > * + * {
+  margin-top: 2.25rem !important;
+}
+
+.comfortable-view .gap-6 {
+  gap: 2.25rem !important;
+}
+
+.comfortable-view .space-y-4 > * + * {
+  margin-top: 1.5rem !important;
+}
+
+.comfortable-view .p-6 {
+  padding: 2rem !important;
+}
+
+.comfortable-view .mb-6 {
+  margin-bottom: 2rem !important;
+}
+
+/* ─── Compact View Modifiers ─────────────────────────────── */
+.compact-view td,
+.compact-view th {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.compact-view .space-y-6 > * + * {
+  margin-top: 1rem !important;
+}
+
+.compact-view .gap-6 {
+  gap: 1rem !important;
+}
+
+.compact-view .space-y-4 > * + * {
+  margin-top: 0.75rem !important;
+}
+
+.compact-view .p-6 {
+  padding: 1rem !important;
+}
+
+.compact-view .mb-6 {
+  margin-bottom: 1rem !important;
+}

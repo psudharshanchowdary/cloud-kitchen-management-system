@@ -73,6 +73,18 @@ export const db = {
     const users = await db.getUsers();
     return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
   },
+  updateUserPreferences: async (userId: string, preferences: any): Promise<User> => {
+    const database = readDb();
+    const index = database.users.findIndex((u: any) => u.id === userId);
+    if (index === -1) throw new Error("User not found");
+    const updatedUser = {
+      ...database.users[index],
+      preferences
+    };
+    database.users[index] = updatedUser;
+    writeDb(database);
+    return updatedUser;
+  },
 
   // --- Staff ---
   getStaff: async (): Promise<Staff[]> => {
