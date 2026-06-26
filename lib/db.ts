@@ -39,6 +39,13 @@ function readDb(): any {
     }
     const data = fs.readFileSync(dbPath, "utf8");
     const parsed = JSON.parse(data);
+    
+    // Self-healing: if database exists but contains no users, force re-initialize with template data
+    if (!parsed.users || parsed.users.length === 0) {
+      fs.writeFileSync(dbPath, JSON.stringify(seedDbData, null, 2), "utf8");
+      return JSON.parse(JSON.stringify(seedDbData));
+    }
+
     if (!parsed.delivery_drivers) parsed.delivery_drivers = [];
     if (!parsed.deliveries) parsed.deliveries = [];
     if (!parsed.supplier_deliveries) parsed.supplier_deliveries = [];
