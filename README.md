@@ -2,6 +2,20 @@
 
 An enterprise-grade, real-time Cloud Kitchen Operations & Management Platform designed to streamline order fulfillment, kitchen workflow efficiency, supplier logistics, and delivery dispatch. Built using **Next.js**, **TailwindCSS**, **Framer Motion**, and **TypeScript**.
 
+## 🔗 Live Demo & Deployment
+
+Access the live, production-deployed system immediately:
+👉 **[Live Enterprise Console Demo](https://cloud-kitchen-management-system-lime.vercel.app/login)**
+
+### Demo Portal Access
+Use the fast portal shortcuts at the bottom of the sign-in card to autofill and log in as any role:
+*   👑 **Owner**: `owner@queenskitchen.com` (Password: `password123`)
+*   👔 **Operations Manager**: `manager@queenskitchen.com` (Password: `password123`)
+*   👨‍🍳 **Head Chef**: `headchef@queenskitchen.com` (Password: `password123`)
+*   🍳 **Chef**: `chef1@queenskitchen.com` (Password: `password123`)
+*   🌾 **Inventory Manager**: `inventory@queenskitchen.com` (Password: `password123`)
+*   📦 **Packing Staff**: `packer@queenskitchen.com` (Password: `password123`)
+
 ---
 
 ## 🚀 Key Features
