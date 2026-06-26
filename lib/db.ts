@@ -9,12 +9,21 @@ import {
 } from "@/types";
 import { OrderStatus, OrderPriority, ItemStatus, PaymentStatus } from "./constants";
 
-// Resolved path for local database file
-const dbPath = path.join(process.cwd(), "database", "db.json");
+// Resolved path for local database file - Fallback to /tmp if in Vercel environment
+const isVercel = process.env.VERCEL || process.env.NOW_BUILDER || typeof process.env.AWS_LAMBDA !== "undefined";
+const originalDbPath = path.join(process.cwd(), "database", "db.json");
+const dbPath = isVercel ? path.join("/tmp", "db.json") : originalDbPath;
 
 // Helper to read the database
 function readDb(): any {
   try {
+    if (isVercel && !fs.existsSync(dbPath)) {
+      // Copy template seed data to /tmp on serverless spin-up
+      if (fs.existsSync(originalDbPath)) {
+        fs.copyFileSync(originalDbPath, dbPath);
+      }
+    }
+
     if (!fs.existsSync(dbPath)) {
       // Create parent directories if they don't exist
       const dir = path.dirname(dbPath);

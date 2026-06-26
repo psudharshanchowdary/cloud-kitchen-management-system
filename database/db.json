@@ -10483,8 +10483,8 @@
       "supplier_id": "sup-5",
       "storage_location": "Spice Drawer",
       "opening_stock": 135,
-      "quantity": 128.62,
-      "updated_at": "2026-06-21T12:00:00Z"
+      "quantity": 138.62,
+      "updated_at": "2026-06-26T05:08:02.667Z"
     },
     {
       "id": "inv-gulab-mix",
@@ -66293,6 +66293,16 @@
       "reference_id": "order-today-14",
       "notes": "Recipe deduction for 2 portions of Gulab Jamun",
       "created_at": "2026-06-21T07:15:00Z"
+    },
+    {
+      "id": "inv-tr-1782450482667",
+      "ingredient_id": "inv-spices",
+      "ingredient_name": "Biryani Spices & Masala",
+      "type": "IN",
+      "quantity": 10,
+      "reference_id": "sdel-hist-131",
+      "notes": "Supplier delivery from Nilgiri Organic Spices",
+      "created_at": "2026-06-26T05:08:02.667Z"
     }
   ],
   "suppliers": [
@@ -77806,7 +77816,7 @@
       "customer_name": "Rahul Nair",
       "customer_phone": "9876543205",
       "total_amount": 640,
-      "status": "Pending",
+      "status": "Preparing",
       "priority": "High",
       "order_date": "2026-06-21T09:15:00Z",
       "delivery_address": "No. 12, First Main Road, Kasturibai Nagar, Adyar, Chennai - 600020",
@@ -77918,7 +77928,7 @@
       "customer_name": "Rohit Sharma",
       "customer_phone": "9876543201",
       "total_amount": 410,
-      "status": "Packed",
+      "status": "Out For Delivery",
       "priority": "High",
       "order_date": "2026-06-21T08:20:00Z",
       "delivery_address": "No. 8, Khader Nawaz Khan Road, Nungambakkam, Chennai - 600006",
@@ -93434,6 +93444,159 @@
       "details": "Sanjay Kapoor logged in successfully.",
       "id": "log-1782026278463",
       "created_at": "2026-06-21T07:17:58.463Z"
+    },
+    {
+      "user_id": "user-headchef-1",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGOUT",
+      "details": "Sanjay Kapoor logged out.",
+      "id": "log-1782449953095",
+      "created_at": "2026-06-26T04:59:13.095Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1782449957364",
+      "created_at": "2026-06-26T04:59:17.364Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1782450030252",
+      "created_at": "2026-06-26T05:00:30.252Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGIN",
+      "details": "Queen Rajkumari logged in successfully.",
+      "id": "log-1782450260520",
+      "created_at": "2026-06-26T05:04:20.520Z"
+    },
+    {
+      "user_id": "user-owner-1",
+      "user_name": "Queen Rajkumari",
+      "role": "Owner",
+      "action": "LOGOUT",
+      "details": "Queen Rajkumari logged out.",
+      "id": "log-1782450395038",
+      "created_at": "2026-06-26T05:06:35.038Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGIN",
+      "details": "Arvind Swamy logged in successfully.",
+      "id": "log-1782450398444",
+      "created_at": "2026-06-26T05:06:38.444Z"
+    },
+    {
+      "user_id": "user-manager-1",
+      "user_name": "Arvind Swamy",
+      "role": "Operations Manager",
+      "action": "LOGOUT",
+      "details": "Arvind Swamy logged out.",
+      "id": "log-1782450421247",
+      "created_at": "2026-06-26T05:07:01.247Z"
+    },
+    {
+      "user_id": "user-headchef-1",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGIN",
+      "details": "Sanjay Kapoor logged in successfully.",
+      "id": "log-1782450423828",
+      "created_at": "2026-06-26T05:07:03.828Z"
+    },
+    {
+      "user_id": "user-headchef-1",
+      "user_name": "Sanjay Kapoor",
+      "role": "Head Chef",
+      "action": "LOGOUT",
+      "details": "Sanjay Kapoor logged out.",
+      "id": "log-1782450438086",
+      "created_at": "2026-06-26T05:07:18.086Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGIN",
+      "details": "Arun Kumar logged in successfully.",
+      "id": "log-1782450441463",
+      "created_at": "2026-06-26T05:07:21.463Z"
+    },
+    {
+      "user_id": "user-chef-1",
+      "user_name": "Arun Kumar",
+      "role": "Chef",
+      "action": "LOGOUT",
+      "details": "Arun Kumar logged out.",
+      "id": "log-1782450458961",
+      "created_at": "2026-06-26T05:07:38.961Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGIN",
+      "details": "Sunil Mehta logged in successfully.",
+      "id": "log-1782450463116",
+      "created_at": "2026-06-26T05:07:43.116Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "ACCEPT_SUPPLIER_DELIVERY",
+      "details": "Supplier delivery sdel-hist-131 from Nilgiri Organic Spices accepted by Sunil Mehta.",
+      "id": "log-1782450482686",
+      "created_at": "2026-06-26T05:08:02.686Z"
+    },
+    {
+      "user_id": "user-inventory-1",
+      "user_name": "Sunil Mehta",
+      "role": "Inventory Manager",
+      "action": "LOGOUT",
+      "details": "Sunil Mehta logged out.",
+      "id": "log-1782450487967",
+      "created_at": "2026-06-26T05:08:07.967Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGIN",
+      "details": "Deepak Roy logged in successfully.",
+      "id": "log-1782450491992",
+      "created_at": "2026-06-26T05:08:11.992Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "DISPATCH_ORDER",
+      "details": "Order ID order-today-9 dispatched to driver Amit Patel.",
+      "id": "log-1782450501833",
+      "created_at": "2026-06-26T05:08:21.833Z"
+    },
+    {
+      "user_id": "user-packer-1",
+      "user_name": "Deepak Roy",
+      "role": "Packing Staff",
+      "action": "LOGOUT",
+      "details": "Deepak Roy logged out.",
+      "id": "log-1782450505735",
+      "created_at": "2026-06-26T05:08:25.735Z"
     }
   ],
   "kitchen_stations": [
@@ -97962,7 +98125,7 @@
       "phone_number": "9876543211",
       "vehicle_number": "TN 07 CD 5678",
       "vehicle_type": "Bike",
-      "status": "Available"
+      "status": "On Delivery"
     },
     {
       "id": "drv-3",
@@ -104009,6 +104172,16 @@
       "estimated_delivery_time": "2026-06-21T08:55:00.000Z",
       "delivery_status": "Out For Delivery",
       "notes": "Courier dispatched."
+    },
+    {
+      "order_id": "order-today-9",
+      "driver_id": "drv-2",
+      "pickup_time": "2026-06-26T05:08:21.767Z",
+      "delivery_start_time": "2026-06-26T05:08:21.767Z",
+      "estimated_delivery_time": "2026-06-26T05:38:21.767Z",
+      "delivery_status": "Out For Delivery",
+      "notes": "Dispatched from packing desk",
+      "id": "del-1782450501775"
     }
   ],
   "supplier_deliveries": [
@@ -108988,7 +109161,7 @@
       "driver_phone": "9887766554",
       "dispatch_time": "2026-06-21T11:00:00Z",
       "estimated_arrival_time": "2026-06-21T13:30:00Z",
-      "status": "Delayed",
+      "status": "Delivered",
       "delivery_notes": "Nilgiri Organic Spices shipment delayed due to traffic.",
       "invoice_number": "INV-NILG-TODAY",
       "invoice_amount": 4500,
@@ -108997,12 +109170,13 @@
           "ingredient_id": "inv-spices",
           "ingredient_name": "Biryani Spices & Masala",
           "quantity_ordered": 10,
-          "quantity_received": 0,
+          "quantity_received": 10,
           "unit": "kg",
           "status": "Pending"
         }
       ],
-      "created_at": "2026-06-21T11:00:00Z"
+      "created_at": "2026-06-21T11:00:00Z",
+      "arrival_time": "2026-06-26T05:08:02.628Z"
     }
   ]
 }
