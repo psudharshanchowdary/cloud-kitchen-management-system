@@ -8,6 +8,7 @@ import {
   DeliveryDriver, Delivery, SupplierDelivery
 } from "@/types";
 import { OrderStatus, OrderPriority, ItemStatus, PaymentStatus } from "./constants";
+import seedDbData from "../database/db.json";
 
 // Resolved path for local database file - Fallback to /tmp if in Vercel environment
 const isVercel = process.env.VERCEL || process.env.NOW_BUILDER || typeof process.env.AWS_LAMBDA !== "undefined";
@@ -19,9 +20,11 @@ function readDb(): any {
   try {
     if (isVercel && !fs.existsSync(dbPath)) {
       // Copy template seed data to /tmp on serverless spin-up
-      if (fs.existsSync(originalDbPath)) {
-        fs.copyFileSync(originalDbPath, dbPath);
+      const dir = path.dirname(dbPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
+      fs.writeFileSync(dbPath, JSON.stringify(seedDbData, null, 2), "utf8");
     }
 
     if (!fs.existsSync(dbPath)) {
@@ -30,17 +33,9 @@ function readDb(): any {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      // Write empty structure
-      const emptyDb = {
-        users: [], staff: [], attendance: [], menu_items: [],
-        menu_item_ingredients: [], inventory: [], inventory_transactions: [],
-        suppliers: [], purchase_orders: [], purchase_order_items: [],
-        orders: [], order_items: [], expenses: [], revenue: [],
-        notifications: [], activity_logs: [], kitchen_stations: [], chef_assignments: [],
-        delivery_drivers: [], deliveries: [], supplier_deliveries: []
-      };
-      fs.writeFileSync(dbPath, JSON.stringify(emptyDb, null, 2), "utf8");
-      return emptyDb;
+      // Write template seed data
+      fs.writeFileSync(dbPath, JSON.stringify(seedDbData, null, 2), "utf8");
+      return JSON.parse(JSON.stringify(seedDbData));
     }
     const data = fs.readFileSync(dbPath, "utf8");
     const parsed = JSON.parse(data);
@@ -49,8 +44,8 @@ function readDb(): any {
     if (!parsed.supplier_deliveries) parsed.supplier_deliveries = [];
     return parsed;
   } catch (error) {
-    console.error("Error reading db.json, returning empty structure", error);
-    return {};
+    console.error("Error reading db.json, returning seed data fallback", error);
+    return JSON.parse(JSON.stringify(seedDbData));
   }
 }
 
